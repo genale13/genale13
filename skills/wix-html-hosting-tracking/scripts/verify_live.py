@@ -7,7 +7,9 @@
 Checks per page: HTTP status and redirects, <title>, meta description, canonical, noindex, exactly one
 copy of each Google tag, html-tracker present, consent defaults before the tag, Content-Security-Policy
 that would block Google. Site-wide: robots.txt, sitemap.xml, real 404s, /folder/ vs /file.html URLs.
-Exit code 1 when any FAIL is found. For the in-browser event check use browser_check.js.
+Exit code 1 when any FAIL is found. Use --preflight on the free *.wix-site-host.com URL or a local copy, where
+canonical/sitemap URLs already point at the final domain. In-browser checks: browser_check.js (Route A) and
+simulate_embed.js (Route B, before installing). This script is for Route A sites, not Wix editor pages.
 """
 import argparse
 import random
@@ -86,7 +88,7 @@ def check_page(base, path, args):
     else:
         href = re.search(r'href\s*=\s*["\']([^"\']+)', canon.group(0), re.I)
         if href and href.group(1).rstrip('/') != final.rstrip('/'):
-            note('WARN', '%s canonical is %s but the page lives at %s' % (label, href.group(1), final))
+            note('INFO' if args.preflight else 'WARN', '%s canonical is %s but the page lives at %s' % (label, href.group(1), final))
     # Google tags: exactly one loader per container
     # standard snippet passes the ID as the last IIFE argument; some installs use a direct gtm.js?id= URL
     gtm_ids = re.findall(r"['\"]dataLayer['\"]\s*,\s*['\"](GTM-[A-Z0-9]+)['\"]\s*\)", html)
@@ -129,6 +131,7 @@ def main():
     ap.add_argument('--from-sitemap', action='store_true', help='also check every URL in sitemap.xml (max 50)')
     ap.add_argument('--gtm', help='expected GTM container ID')
     ap.add_argument('--gtag', default='', help='expected Google tag IDs, comma-separated')
+    ap.add_argument('--preflight', action='store_true', help='testing before the final domain is live: host mismatches are INFO')
     args = ap.parse_args()
     args.gtag_ids = [i.strip() for i in args.gtag.split(',') if i.strip()]
     base = args.base.rstrip('/')
@@ -159,7 +162,8 @@ def main():
             foreign = [l for l in locs if urlparse(l).hostname != host]
             note('OK', 'sitemap.xml lists %d URL(s)' % len(locs))
             if foreign:
-                note('FAIL', 'sitemap.xml lists URLs on another host, e.g. %s (re-run prepare_site.py with the right --base-url)' % foreign[0])
+                note('INFO' if args.preflight else 'FAIL', 'sitemap.xml lists URLs on another host, e.g. %s%s'
+                     % (foreign[0], ' (expected before the domain is connected)' if args.preflight else ' (re-run prepare_site.py with the right --base-url)'))
             if args.from_sitemap:
                 for l in locs[:50]:
                     p = urlparse(l).path or '/'

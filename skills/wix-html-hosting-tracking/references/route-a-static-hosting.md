@@ -14,7 +14,7 @@ guide), recipe *Upload a Website or HTML Files*
 - **Limits:** 20 MB per file, 20 MB in total, 5,000 files. Accepted types: html/htm, css, js/mjs/cjs/jsx/map,
   png/jpg/jpeg/gif/svg/webp/ico/avif/bmp, mp4/webm/ogv, mp3/wav/ogg/m4a, woff/woff2/ttf/otf/eot,
   json/xml/txt/md, pdf/csv/yaml, geojson, glb/gltf/bin. Anything else (e.g. `.py`, `.php`) is rejected.
-  Static only: no PHP, no server code.
+  Static only: no PHP, no server code. A later edit through Wix's patch helper keeps at most 2,000 files.
 - **Entry:** an HTML file at the top level; with several top-level HTML files one must be `index.html`.
 - **What Wix adds:** every uploaded site loads Wix's *site script*: Wix Analytics page views, the project's
   cookie-consent policy, the dashboard favicon/SEO tags (in the browser, only where the page lacks its own
@@ -22,9 +22,14 @@ guide), recipe *Upload a Website or HTML Files*
   Marketing Integrations**. So: the Google tag goes in the HTML (`prepare_site.py`) **or** in Marketing
   Integrations, never both.
 - **Consent:** a new headless site's default consent policy grants every category until the owner sets a
-  stricter one; no banner shows by default. `prepare_site.py` adds Google Consent Mode v2 defaults that start
-  *denied* in the EEA, UK, Switzerland and Quebec (`--consent-regions`), and maps a Wix banner choice to
-  Consent Mode once the visitor chooses.
+  stricter one, and Wix's site script shows a banner only when the project's policy requires one (it shows none
+  by default; Wix Analytics follows that policy). `prepare_site.py` adds Google Consent Mode v2 defaults that
+  start *denied* in the EEA, UK, Switzerland and Quebec (`--consent-regions`), and turns a Wix banner choice into
+  a Consent Mode update once the visitor chooses. Without any banner, visitors in those regions can never say
+  yes: Google then only gets cookieless pings (modelled conversions). If they are a real audience, either set a
+  restrictive policy/banner for the project (Wix *Update Consent Policy* API and cookie-banner settings; check
+  on the live site that the banner appears) or use your own consent platform through GTM and run
+  `prepare_site.py --no-consent`.
 - **SEO:** Wix does not create `robots.txt` or `sitemap.xml` for uploaded sites and does not render SEO tags
   into the HTML. `prepare_site.py` writes all of them into the files (title, description warnings, canonical,
   Open Graph, sitemap, robots).
@@ -67,7 +72,7 @@ guide's provision call, run with `ExecuteWixAPI` at account scope, looks like th
 async function run() {
   return wix.request({ scope: 'account', method: 'POST',
     url: 'https://www.wixapis.com/headless-business-setup/v1/headless-business/provision',
-    body: { origin: 'agent', agent: 'claude-code/cli/unknown',
+    body: { origin: 'agent', agent: 'claude-code/cli/<model>',   // client/surface/model, 'unknown' for a part you cannot tell
       newMetasite: { namingStrategy: { metaSiteName: 'Spring LP - Example' } },   // max 40 chars, no seedOptions for static pages
       synchronousSteps: ['SET_METASITE_NAME', 'CONFIGURE_HEADLESS_APP'] } });
 }
@@ -85,24 +90,32 @@ the recipe shows). Never create a second site for an update.
    `replaceAll: true` makes the site exactly the files sent. Each call ≤ 10 MB. Copy the bundle text
    exactly; do not retype or summarise it. Binaries larger than the inline limit are listed in
    `report.json → not_in_bundles`; use route 2 or 3 for those (or put large images on Wix Media with
-   `UploadImageToWixSite` and reference the returned `static.wixstatic.com` URL).
+   `UploadImageToWixSite` and reference the returned `static.wixstatic.com` URL). Clients that can attach
+   files (ChatGPT, Codex) may pass `site.zip` as an attachment instead; Claude passes the text bundle.
 2. **Shell + Wix CLI token (binary-safe, whole site):** `npx @wix/cli@latest login` (browser approval, once),
    `export ACCESS_TOKEN=$(npx @wix/cli@latest token)` (valid 15 minutes), `export META_SITE_ID=...`, then
    `bash <out>_deploy/deploy_curl.sh`. A raw drop replaces every file on the site with the ones sent.
 3. **Drop page (no tools):** the user drags `site.zip` (or the folder) onto https://www.wix.com/headless/drop
-   for a new site, or in the site's dashboard: **Edit Frontend → Update Site** for an existing one. Uploading
-   there replaces the whole site.
+   for a new site (it goes live at once; the user signs in to keep it), or in the site's dashboard: **Edit
+   Frontend → Update Site** card → Drop for an existing one (Wix Headless docs, *Upload a Static Site*).
+   Uploading there replaces the whole site.
 
 ### 4. Verify on the live URL
 
 ```bash
-python3 scripts/verify_live.py https://<live-host> --pages / /about/ --gtm GTM-XXXXXXX --from-sitemap
-node scripts/browser_check.js "https://<live-host>/?utm_source=qa&utm_medium=test" --click "a,button"
+python3 scripts/verify_live.py https://<live-host> --pages / /about/ --gtm GTM-XXXXXXX --from-sitemap --preflight
+node scripts/browser_check.js "https://<live-host>/?utm_source=qa&utm_medium=test" --submit
 ```
+
+`--preflight` is for the free URL or a local copy (python3 -m http.server in `<out>/`): the canonical and
+sitemap URLs already point at the final domain, so host mismatches are reported as INFO. Drop it once the
+real domain is live.
 
 `verify_live.py` checks robots/sitemap, real 404s, `/folder/` vs `/folder/index.html`, one copy of each tag,
 consent before the tag, canonical, noindex and CSP. `browser_check.js` loads the page in Chromium and lists
-the tracker events, dataLayer pushes and the Google hits (blocked by default so tests don't pollute data).
+the tracker events, dataLayer pushes and the Google hits (answered locally, so tests don't pollute data);
+`--submit` fills and submits the first form, shows where it would post (nothing is delivered) and flags emails
+in URLs. "A container loaded but sent NO hits" usually means the GTM container is empty or unpublished.
 If `/about/` does not serve `about/index.html`, re-run `prepare_site.py` with `--explicit-index` and re-upload.
 
 ### 5. Connect the domain
@@ -120,6 +133,19 @@ Google Search Console.
 
 Give the live URL, the dashboard link `https://manage.wix.com/dashboard/<metaSiteId>`, what was changed
 (from `report.md`), what was verified, and the next Google-side steps (`google-setup.md`).
+
+## Forms on a static site
+
+A static host stores nothing: a form without a real `action` reloads the page with the answers in the URL
+(lead lost, email inside GA4 page URLs). `prepare_site.py` warns about forms with no action or with GET. Options:
+
+- post to a form backend with `method="post"`: the CRM's form endpoint (HubSpot, Salesforce…), Formspree,
+  Basin, Getform… The hidden `gclid`/`utm_*` fields travel with the lead for offline conversion imports;
+- submit with JavaScript (`fetch`) and call `htmlTracker.lead({...}, {email, phone})` only after the backend
+  confirms, so `generate_lead` counts real leads (a plain form counts at submit, before captcha/server checks);
+- leads stored in Wix (Wix Forms, contacts, automations): a Wix Headless build (`StartHeadlessBuild`).
+
+Also link a privacy policy from every page that collects contact details (the script warns).
 
 ## Several pages and several clients
 

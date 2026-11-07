@@ -5,8 +5,10 @@
     Settings > Development & integrations > Custom Code > + Add Custom Code
       - Add Code to Pages: All pages (load code on each new page)
       - Place Code in: Body - end
-      - Code Type: Analytics
-  Requires: Google Tag OR Google Tag Manager connected in Marketing Integrations (not both).
+      - Code Type: Analytic (Wix's label; Essential is the default and loads before consent)
+  Requires: Google Tag OR Google Tag Manager connected in Marketing Integrations (not both), a Premium plan and
+  the final domain connected FIRST (Wix deletes Custom Code snippets when the site's domain changes).
+  It only relays events from embeds that contain html-tracker (prepare_site.py --route embed).
 
   What it does: receives the events that html-tracker posts from inside your embedded HTML
   (iframe on *.filesusr.com) and sends them from THIS page, so they carry the page's first-party
@@ -27,8 +29,8 @@
     // Accept any Wix embed origin (https://<anything>.filesusr.com). Set false to accept only
     // this site's own embed host (www-example-com.filesusr.com) plus allowedOrigins.
     allowAnyFilesusr: true,
-    // gtag mode only: event name -> Google Ads conversion. The AW- ID must be a destination of the
-    // Google tag connected in Wix Marketing Integrations.
+    // gtag mode only: event name -> Google Ads conversion. Also add the AW- account as a destination of the
+    // Google tag connected in Wix, so Google stores the ad click (gclid) on every landing page.
     // e.g. generate_lead: { send_to: 'AW-123456789/AbCdEfGhIj', value: 0, currency: 'CAD' }
     conversions: {},
     debug: false
@@ -45,7 +47,8 @@
   var ATTR_KEYS = ['gclid', 'gbraid', 'wbraid', 'dclid', 'fbclid', 'msclkid', 'utm_source', 'utm_medium',
     'utm_campaign', 'utm_term', 'utm_content', 'utm_id'];
   var dl = (w.dataLayer = w.dataLayer || []);
-  function gtag() { dl.push(arguments); }
+  // Use the page's own gtag() when Wix defines it; otherwise queue commands in dataLayer the standard way.
+  function gtag() { if (typeof w.gtag === 'function' && w.gtag !== gtag) { w.gtag.apply(w, arguments); } else { dl.push(arguments); } }
   function dbg() { if (CONFIG.debug && w.console) try { console.log.apply(console, ['[html-tracker listener]'].concat([].slice.call(arguments))); } catch (e) {} }
   function clip(s, n) { s = s == null ? '' : String(s); return s.length > n ? s.slice(0, n) : s; }
 
@@ -78,17 +81,29 @@
   function refOrigin() {
     try { var u = new URL(d.referrer); return u.origin !== location.origin ? u.origin : ''; } catch (e) { return ''; }
   }
-  // UTMs (campaign labels, not identifiers) are remembered for the session so a form on a later
-  // page still knows the campaign. gclid/gbraid come only from the URL or Google's own cookies,
-  // which Google sets only when ad storage is allowed.
+  // UTMs (campaign labels) are remembered for the session so a form on a later page still knows the
+  // campaign. Ad click IDs (gclid/gbraid/wbraid...) are remembered only while Wix's consent policy allows
+  // advertising; otherwise they come only from the URL or Google's own consent-aware _gcl_* cookies.
+  function adsAllowed() {
+    try {
+      var m = w.consentPolicyManager, p = m && m.getCurrentConsentPolicy && m.getCurrentConsentPolicy();
+      return p && p.policy ? !!p.policy.advertising : true; // no Wix consent manager on the page: no banner in use
+    } catch (e) { return true; }
+  }
   var q = parseQuery(location.search), attrib = {};
   try { attrib = JSON.parse(w.sessionStorage.getItem('wixhtml_attrib') || '{}') || {}; } catch (e) {}
-  var hasUtm = ATTR_KEYS.some(function (k) { return /^utm_/.test(k) && q[k]; });
-  if (hasUtm) {
-    attrib = { landing_page: location.pathname, referrer_url: refOrigin() };
-    ATTR_KEYS.forEach(function (k) { if (/^utm_/.test(k) && q[k]) attrib[k] = clip(q[k], 300); });
+  function remember() {
+    var hasUtm = ATTR_KEYS.some(function (k) { return /^utm_/.test(k) && q[k]; });
+    var hasClick = ATTR_KEYS.some(function (k) { return !/^utm_/.test(k) && q[k]; });
+    if (!hasUtm && !hasClick) return;
+    if (hasUtm) {
+      attrib = { landing_page: location.pathname, referrer_url: refOrigin() };
+      ATTR_KEYS.forEach(function (k) { if (/^utm_/.test(k) && q[k]) attrib[k] = clip(q[k], 300); });
+    }
+    if (hasClick && adsAllowed()) ATTR_KEYS.forEach(function (k) { if (!/^utm_/.test(k) && q[k]) attrib[k] = clip(q[k], 300); });
     try { w.sessionStorage.setItem('wixhtml_attrib', JSON.stringify(attrib)); } catch (e) {}
   }
+  remember();
   function context() {
     var c = {
       page_url: location.origin + location.pathname,
@@ -192,6 +207,18 @@
     p.event_source = 'html_embed';
     dispatch(name, p, cleanUserData(m.userData));
   });
+  // Tell the embeds already on the page that a listener exists (it may load late, after cookie consent),
+  // instead of waiting for their next hello. Wix re-renders pages client-side, so repeat a few times.
+  function announce() {
+    var frames = d.getElementsByTagName('iframe');
+    for (var i = 0; i < frames.length; i++) {
+      var origin = '';
+      try { origin = new URL(frames[i].src, location.href).origin; } catch (e) { continue; }
+      if (!originOk(origin) || !frames[i].contentWindow) continue;
+      try { frames[i].contentWindow.postMessage({ ns: NS, v: 1, type: 'context', context: context() }, origin); } catch (e) {}
+    }
+  }
+  [0, 1500, 4000].forEach(function (ms) { setTimeout(announce, ms); });
   dbg('ready; own embed origin =', ownEmbedOrigin());
 })(window, document);
 </script>

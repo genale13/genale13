@@ -151,7 +151,7 @@
   }
 
   /* ------------------------------------------------------- bridge handshake */
-  var PARENT_ORIGIN = null, TOP_ORIGIN = null, linked = false, pending = [], gaveUp = false;
+  var PARENT_ORIGIN = null, TOP_ORIGIN = null, linked = false, pending = [];
   if (MODE === 'bridge') {
     var allowed = [].concat(opt('parentOrigins', opt('parentOrigin', [])) || []).filter(Boolean);
     var seen = null, seenTop = null;
@@ -213,7 +213,7 @@
     if (MODE === 'bridge') {
       var msg = { type: 'event', name: name, params: p };
       if (ud) msg.userData = ud;
-      if (linked || gaveUp) post(msg); else pending.push(msg);
+      if (linked) post(msg); else pending.push(msg); // held until a listener answers (it may load after consent)
     } else {
       deliver(name, p, ud);
     }
@@ -602,9 +602,13 @@
     layout();
     w.addEventListener('load', layout);
     setTimeout(layout, 1500); setTimeout(layout, 5000);
+    function scrollable() { // a page that fits on one screen has nothing to scroll: avoid instant 25-100 % noise
+      if (IN_FRAME || root) return true;
+      return Math.max(d.documentElement.scrollHeight, d.body.scrollHeight) > w.innerHeight + 50;
+    }
     var io = new IntersectionObserver(function (entries) {
       for (var i = 0; i < entries.length; i++) {
-        if (!entries[i].isIntersecting) continue;
+        if (!entries[i].isIntersecting || !scrollable()) continue;
         io.unobserve(entries[i].target);
         track('scroll_depth', { percent_scrolled: +entries[i].target.getAttribute('data-pct') });
       }
@@ -708,11 +712,16 @@
     if (opt('trackErrors', false)) w.addEventListener('error', onError);
     if (MODE === 'bridge') {
       track('embed_view', { embed_title: clip(d.title, 100) });
-      hello();
-      [700, 1500, 3000, 6000].forEach(function (ms) { setTimeout(hello, ms); });
-      setTimeout(function () { // no listener answered: send directly so nothing is held forever
-        if (!linked) { gaveUp = true; dbg('no parent listener answered; sending without handshake'); flush(); }
-      }, +opt('handshakeTimeout', 10000));
+      // Keep saying hello until the Wix-page listener answers: Custom Code marked Analytic loads only
+      // after cookie consent, so the listener can appear late. Nothing leaves the iframe before that.
+      var started = Date.now(), limit = +opt('handshakeTimeout', 120000), delay = 500;
+      (function ping() {
+        if (linked) return;
+        if (Date.now() - started > limit) { dbg('no listener answered within', limit, 'ms; dropping', pending.length, 'events'); pending.length = 0; return; }
+        hello();
+        delay = Math.min(delay * 1.6, 4000);
+        setTimeout(ping, delay);
+      })();
     }
     setupScroll();
     setupEngagement();

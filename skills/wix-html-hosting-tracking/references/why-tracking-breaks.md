@@ -25,6 +25,8 @@ unrelated sites stacked on top of each other.
 | The embed only loads after a cookie choice (or never) | In the newer editors each embed has a *Cookies and similar technologies* category; Wix's consent banner holds non-essential categories until the visitor agrees. |
 | GA/GTM added through **Custom Code** "doesn't work" | Wix says tracking scripts (GA, GTM, Meta, TikTok) do not work through Custom Code; connect them in **Marketing Integrations** instead. |
 | Nothing works on a free site | Marketing Integrations, Custom Code, Event Manager and custom elements need a **Premium plan and a connected domain**. |
+| A Custom Code snippet vanished | Wix deletes Custom Code snippets when the site gets a different domain; connect the final domain first. |
+| A snippet that used to work is blocked | Since December 2025 Wix blocks custom code that replaces `fetch`/`XMLHttpRequest`, edits locked globals, reads Wix cookies or passes strings to timers. |
 | SEO: the page ranks as "thin" | Text inside an iframe is credited to the `filesusr.com` URL, not to your page. |
 
 ## The fixes, in order of tracking quality

@@ -13,7 +13,11 @@ inside it**, with SEO intact. It covers:
   or GTM with the page's own cookies and gclid (this is why tracking "was blocked" before: the embed is an
   iframe on another domain, `filesusr.com`).
 - **Browser runbook:** exact click paths for a browser agent such as Claude in Chrome (Wix editor, Wix
-  dashboard, GTM, GA4, Google Ads) for the steps that have no API.
+  dashboard, GTM, GA4, Google Ads) for the steps that have no API, plus a generated `browser-agent-prompt.txt`
+  with the code to paste.
+- **Checks:** `verify_live.py` (published static site), `browser_check.js` (events, Google hits, form
+  submission in a real browser) and `simulate_embed.js` (a simulated Wix page to test an embed before
+  installing anything).
 
 What it tracks: CTA, link, outbound, phone/email/WhatsApp and download clicks, custom `data-track`
 events, rage clicks, scroll depth, engaged time, element views, form view/start/submit/abandon,
@@ -24,8 +28,9 @@ conversions (SHA-256 hashed email/phone), gclid/UTM in hidden form fields, and C
 
 - **claude.ai / Claude desktop:** upload `dist/wix-html-hosting-tracking.skill` under
   Settings → Capabilities → Skills (or open the `.skill` file and click *Save skill*).
-- **Claude Code:** copy the folder `skills/wix-html-hosting-tracking` to `~/.claude/skills/` (all
-  projects) or to `.claude/skills/` inside a project.
+- **Claude Code:** unzip `dist/wix-html-hosting-tracking.skill` into `~/.claude/skills/` (all projects) or
+  `.claude/skills/` in a project. Copying the source folder works too; leave out its `evals/` folder (test
+  prompts and graders, not needed to use the skill).
 - Connect the **Wix** connector so Claude can upload and manage sites (claude.ai → Settings → Connectors →
   Wix; Claude Code: `/plugins install wix`).
 
@@ -38,6 +43,7 @@ embed on my Wix site doesn't track Google Ads conversions, fix it"*.
 cd skills/tests && ./run_tests.sh   # needs python3, node and the playwright package with Chromium
 ```
 
-The end-to-end test prepares `tests/fixture/src` with both routes and checks 48 behaviours in Chromium
-(events, GTM/gtag output, cross-origin bridge, hidden fields, hashing, forged-message rejection).
+The end-to-end test prepares `tests/fixture/src` with both routes and checks 47 behaviours in Chromium
+(events, GTM/gtag output, cross-origin bridge, late listener after consent, hidden fields, hashing,
+forged-message rejection).
 `wix-html-hosting-tracking/evals/` holds the skill-creator test prompts (`claude plugin eval .` runs them).

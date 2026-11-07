@@ -55,7 +55,7 @@ GA4 forbids it.
 | `fillHiddenFields` | `true` | fill gclid/UTM hidden inputs |
 | `trackErrors` | `false` | |
 | `maxEvents` | `300` | safety cap per page view |
-| `handshakeTimeout` | `10000` | bridge: ms to wait for the listener before sending anyway |
+| `handshakeTimeout` | `120000` | bridge: ms to keep waiting for the Wix-page listener (it may load after cookie consent); events stay inside the iframe until it answers and are dropped after this |
 | `debug` | `false` | console logging (also `?tracker_debug=1` in the URL) |
 
 ## HTML attributes
@@ -95,4 +95,5 @@ iframe → page: `{ ns: 'wixhtml', v: 1, type: 'hello' | 'event', embedId, name,
 page → iframe: `{ ns: 'wixhtml', v: 1, type: 'context', context: { page_url, page_path, page_title,
 landing_page, referrer_url, gclid, gbraid, wbraid, utm_* } }`
 `userData` holds only `sha256_email_address` / `sha256_phone_number` (64 hex chars) and is never sent with
-target origin `*`.
+target origin `*`. The iframe repeats `hello` (backing off to every 4 s) until a `context` arrives; the listener
+also sends `context` to every allowed iframe on the page when it starts, so a late listener links immediately.

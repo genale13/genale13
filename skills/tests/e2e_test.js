@@ -203,6 +203,33 @@ ${autoListener}</body></html>`;
   ok(late.some((e) => e.event === 'cta_click' && e.src === 'html_embed' && e.text === 'Order now'), 'queued events delivered as GTM dataLayer events once GTM appears');
   ok(late.some((e) => e.event === 'embed_view'), 'embed_view delivered to GTM');
   await ctx3.close(); sp3.close(); sc3.close();
+
+  /* ------------------- BRIDGE mode, listener loads 12 s late (Custom Code "Analytic" after consent) */
+  const listenerJs = listener.replace(/^[\s\S]*?<script>/, '').replace(/<\/script>\s*$/, '');
+  fs.writeFileSync(path.join(ROOT, 'site-embed', '_late_listener.js'), listenerJs);
+  const parent4 = `<!doctype html><html><head><title>Wix page late</title>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}</script></head><body>
+<iframe id="embed" src="http://localhost:8202/index.embed.html" style="width:100%;height:1600px;border:0"></iframe>
+<script>setTimeout(function(){ var s=document.createElement('script'); s.src='/_late_listener.js'; document.body.appendChild(s); }, 12000);</script>
+</body></html>`;
+  const sp4 = await serve(path.join(ROOT, 'site-embed'), 8201, '127.0.0.1', { '/parent.html': parent4 });
+  const sc4 = await serve(path.join(ROOT, 'site-embed'), 8202, 'localhost');
+  const ctx4 = await browser.newContext();
+  await stubGoogle(ctx4);
+  const p4 = await ctx4.newPage();
+  await p4.goto('http://127.0.0.1:8201/parent.html?gclid=LATEGCLID&utm_source=google&utm_medium=cpc&utm_campaign=late');
+  const child4 = await (await p4.waitForSelector('#embed')).contentFrame();
+  await child4.waitForFunction(() => window.htmlTracker);
+  await child4.click('#cta');
+  await p4.waitForTimeout(3000);
+  const before4 = await p4.evaluate(() => (window.dataLayer || []).filter((e) => Object.prototype.toString.call(e) === '[object Arguments]' && e[0] === 'event').length);
+  ok(before4 === 0, 'late listener: nothing is sent before the listener exists (held inside the iframe)');
+  await child4.waitForFunction(() => window.htmlTracker.context().gclid === 'LATEGCLID', null, { timeout: 20000 }).catch(() => {});
+  ok((await child4.evaluate(() => document.querySelector('input[name=gclid]').value)) === 'LATEGCLID', 'late listener: iframe still receives gclid and fills the hidden field');
+  await p4.waitForTimeout(1500);
+  const late4 = await p4.evaluate(() => (window.dataLayer || []).filter((e) => Object.prototype.toString.call(e) === '[object Arguments]' && e[0] === 'event').map((e) => e[1]));
+  ok(late4.includes('embed_view') && late4.includes('cta_click'), 'late listener: events queued before consent are delivered once it loads');
+  await ctx4.close(); sp4.close(); sc4.close();
   await browser.close();
   console.log(failures ? `\n${failures} FAILED` : '\nALL PASSED');
   process.exit(failures ? 1 : 0);

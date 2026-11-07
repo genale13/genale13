@@ -69,6 +69,10 @@ class Analyzer(HTMLParser):
         self.styles = []         # href of <link rel=stylesheet>
         self.icons = []
         self._h1_buf = []
+        self.forms = []          # {'id', 'action', 'method', 'contact'}
+        self._form = None
+        self.anchors = []        # (href, text)
+        self._a = None
 
     def handle_starttag(self, tag, attrs):
         a = {k.lower(): (v or '') for k, v in attrs}
@@ -105,10 +109,24 @@ class Analyzer(HTMLParser):
                 self.imgs_no_alt += 1
         elif tag == 'a' and a.get('href') is not None:
             self.links.append(a['href'])
+            self._a = [a['href'], []]
         elif tag == 'script' and a.get('src'):
             self.scripts.append(a['src'])
+        if tag == 'form':
+            self._form = {'id': a.get('id') or a.get('name') or 'form_%d' % (len(self.forms) + 1),
+                          'action': a.get('action'), 'method': (a.get('method') or 'get').lower(), 'contact': False}
+            self.forms.append(self._form)
+        elif tag in ('input', 'textarea') and self._form is not None:
+            kind = a.get('type', '').lower()
+            if kind in ('email', 'tel') or re.search(r'mail|phone|tel[eé]?f|courriel|correo', a.get('name', '') + ' ' + a.get('id', ''), re.I):
+                self._form['contact'] = True
 
     def handle_endtag(self, tag):
+        if tag == 'form':
+            self._form = None
+        elif tag == 'a' and self._a is not None:
+            self.anchors.append((self._a[0], re.sub(r'\s+', ' ', ''.join(self._a[1])).strip()))
+            self._a = None
         if tag == 'title':
             self._in_title = False
         elif tag == 'h1' and self._in_h1:
@@ -116,6 +134,8 @@ class Analyzer(HTMLParser):
             self.h1.append(re.sub(r'\s+', ' ', ''.join(self._h1_buf)).strip())
 
     def handle_data(self, data):
+        if self._a is not None:
+            self._a[1].append(data)
         if self._in_title:
             self.title += data
         if self._in_h1:
@@ -132,6 +152,25 @@ def analyze(text):
     if an.title is not None:
         an.title = re.sub(r'\s+', ' ', an.title).strip()
     return an
+
+
+def form_and_privacy_checks(an, pw, enhanced, route):
+    """Warn about lead forms that lose the lead or leak contact data, and a missing privacy link."""
+    lead_forms = [f for f in an.forms if f['contact']]
+    for f in lead_forms:
+        action = (f['action'] or '').strip()
+        if not action or action == '#' or action.lower().startswith('javascript:'):
+            pw('form "%s" has no action: a normal submit reloads %s with the answers in the URL, so the lead is lost '
+               'and the email lands in page URLs sent to GA4. Post it to a form backend (CRM, HubSpot, Formspree...) '
+               'with method="post", or submit it with JavaScript and call htmlTracker.lead() on success%s'
+               % (f['id'], 'the page' if route == 'static' else 'the iframe',
+                  '' if route == 'embed' else ' (static hosting cannot receive form posts)'))
+        elif f['method'] != 'post':
+            pw('form "%s" uses GET: the email/phone typed by the visitor goes into the destination URL; use method="post"' % f['id'])
+    privacy = re.compile(r'privacy|privacidad|privacit|confidentialit|politique|datenschutz|aviso legal|terms', re.I)
+    if (lead_forms or enhanced) and not any(privacy.search((h or '') + ' ' + t) for h, t in an.anchors):
+        pw('no link to a privacy policy on a page that collects contact details (needed for Google Ads enhanced '
+           'conversions, GDPR and Quebec Law 25)')
 
 
 # ------------------------------------------------------------------ google tag removal
@@ -204,6 +243,28 @@ def strip_google_tags(text):
     leftovers = [m.group(0)[:80] for m in INLINE_SCRIPT.finditer(text)
                  if re.search(r"gtag\(\s*['\"](config|event)", m.group(2))]
     return text, removed, ids, leftovers
+
+
+INLINE_HANDLER = re.compile(r'\s+(on[a-z]+)\s*=\s*(["\'])((?:(?!\2).)*)\2', re.I | re.S)
+
+
+def strip_inline_tracking_handlers(text):
+    """Remove on*="gtag(...)" style attributes that only call tracking code. Returns (text, stripped, mixed)."""
+    stripped, mixed = [], []
+
+    def fix(m):
+        code = html.unescape(m.group(3))
+        if not re.search(r'\b(gtag|fbq|ttq|dataLayer)\b', code):
+            return m.group(0)
+        rest = code
+        for fn in ('gtag', 'fbq', 'ttq', 'window.dataLayer.push', 'dataLayer.push'):
+            rest = _strip_calls(rest, fn)
+        if re.sub(r'[\s;]|return\s+true', '', rest) == '':
+            stripped.append(m.group(0).strip())
+            return ''
+        mixed.append(m.group(0).strip())
+        return m.group(0)
+    return INLINE_HANDLER.sub(fix, text), stripped, mixed
 
 
 # ------------------------------------------------------------------------ snippets
@@ -463,8 +524,9 @@ def parse_conversions(items, currency):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('src', help='folder with the site, or a single .html file')
-    ap.add_argument('--route', choices=['static', 'embed'], required=True)
+    ap.add_argument('src', nargs='?', help='folder with the site, or a single .html file (not needed for --route listener)')
+    ap.add_argument('--route', choices=['static', 'embed', 'listener'], required=True,
+                    help='static = own Wix static site; embed = Embed HTML snippet + listener; listener = only the Wix-side listener and browser prompt')
     ap.add_argument('--out', help='output folder (default: <src>-wix-<route>)')
     g = ap.add_argument_group('Google tags')
     g.add_argument('--gtm', help='Google Tag Manager container ID, GTM-XXXXXXX (recommended)')
@@ -488,6 +550,9 @@ def main():
     t.add_argument('--enhanced-conversions', action='store_true', help='hash email/phone (SHA-256) for Google Ads enhanced conversions')
     t.add_argument('--country-code', default='1', help='default phone country code for enhanced conversions')
     t.add_argument('--root', help='CSS selector: only track inside this element')
+    t.add_argument('--site-name', help='embed/listener: Wix site name for the browser-agent prompt')
+    t.add_argument('--site-id', help='embed/listener: Wix site ID (metaSiteId) for direct dashboard links in the prompt')
+    t.add_argument('--velo', action='store_true', help='embed/listener: also write velo-page-code.js (use it INSTEAD of the listener)')
     t.add_argument('--track-errors', action='store_true')
     t.add_argument('--debug', action='store_true')
     s = ap.add_argument_group('SEO (static route)')
@@ -522,6 +587,15 @@ def main():
     regions = [] if args.consent_regions == 'none' else (
         EU_REGIONS if args.consent_regions == 'eu' else [r.strip().upper() for r in args.consent_regions.split(',') if r.strip()])
 
+    if args.route == 'listener':
+        out = os.path.abspath(args.out or 'wix-listener')
+        report = {'route': 'listener', 'source': '(none)', 'output': out, 'pages': {}, 'warnings': [], 'renamed': {},
+                  'skipped_files': [], 'removed_tags': {}, 'ids_found_in_html': [], 'next_steps': []}
+        write_listener_files(args, gtag_ids, out, report, report['warnings'].append, [])
+        finish(args, report, out)
+        return
+    if not args.src:
+        sys.exit('src is required for --route %s' % args.route)
     src = os.path.abspath(args.src)
     if not os.path.exists(src):
         sys.exit('Not found: %s' % src)
@@ -535,10 +609,14 @@ def main():
         prepare_static(args, files, base_dir, out, regions, gtag_ids, report, warn)
     else:
         prepare_embed(args, files, base_dir, out, gtag_ids, report, warn)
+    finish(args, report, out)
+
+
+def finish(args, report, out):
 
     report['ids_found_in_html'] = sorted(set(report['ids_found_in_html']))
     if not args.check_only:
-        deploy_dir = out if args.route == 'embed' else out + '_deploy'
+        deploy_dir = out + '_deploy' if args.route == 'static' else out
         os.makedirs(deploy_dir, exist_ok=True)
         with open(os.path.join(deploy_dir, 'report.json'), 'w', encoding='utf-8') as fh:
             json.dump(report, fh, indent=2, ensure_ascii=False)
@@ -670,10 +748,17 @@ def prepare_static(args, files, base_dir, out, regions, gtag_ids, report, warn):
             else:
                 pw('missing <title>: write one (50-60 characters, main keyword first)')
         elif len(title) > 65:
-            pw('title is %d characters; Google shows about 60' % len(title))
+            pw('title is %d characters; Google shows about 60, so shorten it (keyword first)' % len(title))
+        elif len(title) < 30:
+            pw('title is only %d characters ("%s"); aim for 50-60 with the main keyword and the brand' % (len(title), title))
         desc = an.meta.get('description', '')
         if not desc:
             pw('missing meta description: write one (140-160 characters, with the offer and a call to action)')
+        elif len(desc) < 70:
+            pw('meta description is only %d characters; aim for 140-160 with the offer and a call to action' % len(desc))
+        elif len(desc) > 170:
+            pw('meta description is %d characters; Google cuts it around 155-160' % len(desc))
+        form_and_privacy_checks(an, pw, args.enhanced_conversions, 'static')
         robots = an.meta.get('robots', '')
         is_noindex = 'noindex' in robots.lower()
         if is_noindex:
@@ -762,6 +847,7 @@ def prepare_static(args, files, base_dir, out, regions, gtag_ids, report, warn):
             report['warnings'].append('kept your own sitemap.xml; make sure it lists %s URLs' % args.base_url)
         else:
             today = datetime.date.today().isoformat()
+            sitemap_urls.sort(key=lambda x: (x[0].rstrip('/') != args.base_url, x[0]))  # home page first
             items = ''.join('  <url><loc>%s</loc><lastmod>%s</lastmod></url>\n' % (html.escape(u), today) for u, _ in sitemap_urls)
             extra['sitemap.xml'] = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n%s</urlset>\n' % items
         robots_line = 'Sitemap: %s/sitemap.xml' % args.base_url
@@ -921,6 +1007,7 @@ def prepare_embed(args, files, base_dir, out, gtag_ids, report, warn):
     if not args.check_only:
         os.makedirs(out, exist_ok=True)
     tracker = read_asset(TRACKER_FILE).replace('</script', '<\\/script')
+    embeds = []
     for f in html_files:
         with open(os.path.join(base_dir, f), encoding='utf-8', errors='replace') as fh:
             text = fh.read()
@@ -933,20 +1020,23 @@ def prepare_embed(args, files, base_dir, out, gtag_ids, report, warn):
             report['removed_tags'][f] = removed
         for lo in leftovers:
             pw('gtag() calls mixed with other code were left in place; remove them to avoid a second, broken tag: %s...' % lo)
-        inline_calls = [m.group(0) for m in re.finditer(
-            r'\bon\w+\s*=\s*(["\'])(?:(?!\1).)*?\b(?:gtag|dataLayer|fbq|ttq)\b(?:(?!\1).)*\1', text, re.I | re.S)]
-        if inline_calls or leftovers or (removed and re.search(r'\bgtag\s*\(', text)):
+        text, stripped, mixed = strip_inline_tracking_handlers(text)
+        if stripped:
+            page['changes'].append('removed %d inline tracking handler(s) (%s): html-tracker reports these clicks/submits '
+                                   'and the listener fires the conversion' % (len(stripped), '; '.join(c[:60] for c in stripped[:3])))
+        if mixed or leftovers or (removed and re.search(r'\bgtag\s*\(', text)):
             # the Google tag is gone from the iframe: keep leftover gtag() calls from throwing errors
             text = add_to_head_start(text, '<script>window.dataLayer = window.dataLayer || []; '
                                            'window.gtag = window.gtag || function () { dataLayer.push(arguments); };</script>')
             text = move_charset_first(text)
-            page['changes'].append('added a no-op gtag() stub so leftover inline gtag() calls do not throw')
-            for call in inline_calls[:5]:
-                pw('inline handler %s no longer sends anything (no Google tag inside the iframe). html-tracker already '
-                   'tracks the click/submit; map conversions with --conversion or in GTM instead' % call[:90])
+            page['changes'].append('added a no-op gtag() stub so leftover gtag() calls do not throw')
+            for call in mixed[:5]:
+                pw('inline handler %s mixes tracking with other code; its gtag/fbq part now does nothing. Remove that part '
+                   'in a copy of the source and re-run (the click is already tracked)' % call[:90])
         if re.search(r'connect\.facebook\.net|fbq\(|analytics\.tiktok\.com|ttq\.', text):
             pw('other pixels (Meta/TikTok) inside the iframe have the same third-party problem; connect them in Wix '
                'Marketing Integrations instead and let the listener feed them (GTM) or use the Velo option')
+        form_and_privacy_checks(analyze(text), pw, args.enhanced_conversions, 'embed')
         text, inlined, problems = inline_local_assets(text, f, base_dir, args.inline_binary_max_kb)
         if inlined:
             page['changes'].append('inlined %d local file(s) so the snippet works on filesusr.com' % inlined)
@@ -970,28 +1060,111 @@ def prepare_embed(args, files, base_dir, out, gtag_ids, report, warn):
                 fh.write(text)
         page['output'] = os.path.relpath(dst, out)
         report['pages'][f] = page
+        embeds.append((page['output'], text))
 
-    # configured parent listener + Velo alternative
+    write_listener_files(args, gtag_ids, out, report, warn, embeds)
+
+
+def write_listener_files(args, gtag_ids, out, report, warn, embeds):
+    """Configured Custom Code listener, Velo alternative and a paste-ready browser-agent prompt."""
     listener = read_asset('wix-parent-listener.html')
-    lcfg = {'mode': 'gtm' if args.gtm else ('gtag' if gtag_ids else 'auto'),
-            'allowedOrigins': args.listener_allow_origin or [], 'allowAnyFilesusr': True,
+    mode = 'gtm' if args.gtm else ('gtag' if gtag_ids else 'auto')
+    lcfg = {'mode': mode, 'allowedOrigins': args.listener_allow_origin or [], 'allowAnyFilesusr': True,
             'conversions': args.conversions or {}, 'debug': bool(args.debug)}
     listener = re.sub(r'/\*__CONFIG_START__\*/.*?/\*__CONFIG_END__\*/',
                       lambda m: '/*__CONFIG_START__*/' + json.dumps(lcfg, indent=2) + '/*__CONFIG_END__*/', listener, flags=re.S)
+    prompt = browser_agent_prompt(args, gtag_ids, mode, listener, embeds)
     if not args.check_only:
+        os.makedirs(out, exist_ok=True)
         with open(os.path.join(out, 'wix-parent-listener.html'), 'w', encoding='utf-8') as fh:
             fh.write(listener)
-        shutil.copy2(os.path.join(ASSETS, 'velo-page-code.js'), os.path.join(out, 'velo-page-code.js'))
+        with open(os.path.join(out, 'browser-agent-prompt.txt'), 'w', encoding='utf-8') as fh:
+            fh.write(prompt)
+        if args.velo:
+            shutil.copy2(os.path.join(ASSETS, 'velo-page-code.js'), os.path.join(out, 'velo-page-code.js'))
+    report['listener_mode'] = mode
     if args.conversions and not gtag_ids and not args.gtm:
         warn('--conversion only works when the Wix site uses the Google tag (pass --gtag with its ID so mode=gtag)')
     if args.gtm and args.conversions:
-        warn('with GTM, build the Google Ads conversion tags in GTM (see references/google-setup.md); --conversion is ignored')
+        warn('with GTM, build the Google Ads conversion tags in GTM (google-setup.md section 3); --conversion is ignored')
+    if not args.gtm and not gtag_ids:
+        warn('no --gtm/--gtag given: the listener uses mode "auto" (detects GTM or the Google tag at run time)')
     report['next_steps'] = [
-        'Wix site: connect ONE of Google tag or GTM in Marketing Integrations (Premium plan + connected domain).',
-        'Paste wix-parent-listener.html once in Settings > Custom Code (All pages, Body - end, Code Type: Analytics).',
-        'Paste each *.embed.html into its Embed HTML element (or use velo-page-code.js instead of the listener, never both).',
-        'Put the page\'s important text in native Wix text elements too: search engines credit iframe content to filesusr.com, not to your page.',
-        'Publish, then check with Tag Assistant / GA4 DebugView (references/google-setup.md).']
+        'Check the Wix site first: it needs a Premium plan and a connected domain (Marketing Integrations, Custom Code).',
+        'Connect the final domain BEFORE adding Custom Code: Wix deletes Custom Code snippets when the site gets a different domain.',
+        'Connect ONE of Google Tag or Google Tag Manager in the site\'s Marketing Integrations.',
+        'Paste wix-parent-listener.html once in Settings > Custom Code (All pages, load on each new page, Body - end, '
+        'Code Type: Analytic). It only relays events from embeds that contain html-tracker.',
+        'Paste each *.embed.html into its Embed HTML element.' + (' velo-page-code.js is an ALTERNATIVE to the listener: use one, never both.' if args.velo else ''),
+        'browser-agent-prompt.txt does the dashboard steps above with a browser agent such as Claude in Chrome.',
+        'Put the page\'s key text in native Wix text elements too: search engines credit iframe text to filesusr.com.',
+        'Publish the editor changes (ask first), then check with Tag Assistant / GA4 DebugView.']
+
+
+def browser_agent_prompt(args, gtag_ids, mode, listener, embeds):
+    site = args.site_name or 'the Wix site the user names'
+    sid = args.site_id
+    link = (lambda path: ' (direct link: https://www.wix.com/dashboard/%s/%s)' % (sid, path)) if sid else (lambda path: '')
+    home = ' (direct link: https://manage.wix.com/dashboard/%s)' % sid if sid else ''
+    if args.gtm:
+        tag_step = ('Marketing Integrations%s -> card "Google Tag Manager" -> Connect -> Add Google Tag Manager -> enter %s -> Save. '
+                    'Leave the "Google Tag" card alone.' % (link('marketing-integration'), args.gtm))
+        tag_id = args.gtm
+    elif gtag_ids:
+        tag_step = ('Marketing Integrations%s -> card "Google Tag" -> Connect -> Add Google Tag ID -> paste %s (no spaces) -> Save. '
+                    'Leave the "Google Tag Manager" card alone.' % (link('marketing-integration'), gtag_ids[0]))
+        tag_id = gtag_ids[0]
+    else:
+        tag_step = 'Skip: the user did not give a tag ID. Only report which Google integration is connected, if any.'
+        tag_id = 'GTM-/G-'
+    lines = [
+        'TASK FOR A BROWSER AGENT: set up Google tracking for HTML embeds on the Wix site "%s"%s.' % (site, home),
+        '',
+        'RULES',
+        '- The user signs in. Never type passwords or 2FA codes; if a login page appears, stop and ask the user.',
+        '- Ask the user before publishing, buying or upgrading anything, connecting or changing a domain, or deleting anything.',
+        '- Paste code exactly as given: use paste (or set the code box value). Never type it key by key: code boxes auto-close',
+        '  brackets and quotes. Copy only what is between a START line and its END line, not those lines.',
+        '- The dashboard may be in another language: match buttons by meaning and position.',
+        '- Change nothing else.',
+        '',
+        'STOP AND REPORT (do not continue) IF',
+        '- the site shows an Upgrade banner / Free plan, or has no connected domain: Marketing Integrations and Custom Code need both;',
+        '- a different Google Tag Manager container or Google tag is already connected (report its ID);',
+        '- the step would leave BOTH "Google Tag" and "Google Tag Manager" connected;',
+        '- Custom Code already contains a snippet named "html-tracker listener" (ask whether to replace it).',
+        '',
+        'STEP 1 - Check plan and domain: open the site dashboard%s. Note the plan and the connected domain (Settings -> Domains).' % home,
+        'STEP 2 - Connect the tag: %s Read the saved ID back.' % tag_step,
+        'STEP 3 - Add the listener: Settings%s -> section "Development & integrations" -> Custom Code%s -> + Add Custom Code ->'
+        % (link('settings'), link('manage-website/embeds')),
+        '  paste the LISTENER code below into the code box -> Name: html-tracker listener -> Add Code to Pages: All pages, load',
+        '  code on each new page -> Place Code in: Body - end -> tab "Code Type": Analytic (may read "Analytics") -> Apply.',
+        '  Read back: the code starts with "<!--" and the line "html-tracker parent listener", contains "mode": "%s",' % mode,
+        '  and ends with "</script>". Fix it if anything is missing.',
+    ]
+    if embeds:
+        lines += ['STEP 4 - Embeds: open the editor. For each embed below, select its Embed HTML element (or add one: Add Elements',
+                  '  -> Embed Code -> Embed HTML), click Enter Code, replace ALL existing code with the EMBED code, Apply, and resize',
+                  '  it so nothing is cut off. Do NOT publish: tell the user the editor is ready to publish.']
+    lines += [
+        'STEP %d - Check: on the live site, open DevTools Console and run' % (5 if embeds else 4),
+        '  Object.keys(window.google_tag_manager||{})   -> should list %s' % tag_id,
+        '  window.__htmlTrackerListener                 -> true (if undefined: consent not given yet, or the code is not live)',
+        '  Optional: tagassistant.google.com -> Add domain -> the page URL -> Connect.',
+        '',
+        'REPORT FORMAT',
+        '- Plan and domain: ...',
+        '- Tag connected: ... (or why not)',
+        '- Custom Code: name / placement / code type / read-back OK?',
+    ]
+    if embeds:
+        lines.append('- Embeds updated: ... (editor not published)')
+    lines += ['- Checks: ...', '- Needs the user: ...', '',
+              '=== LISTENER CODE START ===', listener.rstrip('\n'), '=== LISTENER CODE END ===']
+    for name, code in embeds or []:
+        lines += ['', '=== EMBED CODE START: %s ===' % name, code.rstrip('\n'), '=== EMBED CODE END: %s ===' % name]
+    return '\n'.join(lines) + '\n'
 
 
 def inline_local_assets(text, page_rel, base_dir, max_kb):

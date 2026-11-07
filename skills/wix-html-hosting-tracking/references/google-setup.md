@@ -30,7 +30,9 @@ the HTML. The Google tag (`--gtag`) is simpler: GA4 events and Ads conversions w
 4. **Cross-domain:** not needed between `lp.example.com` and `www.example.com` (same root domain, cookies are
    shared). Needed only if the journey crosses different domains: Data stream → *Configure tag settings →
    Configure your domains*.
-5. **Test:** Admin → Data display → **DebugView** while browsing with Tag Assistant connected, or with
+5. **Data redaction:** Data stream → *Redact data* → turn on email redaction (and list query parameters
+   such as `email`, `phone`) so a mistaken GET form or URL cannot push personal data into GA4.
+6. **Test:** Admin → Data display → **DebugView** while browsing with Tag Assistant connected, or with
    `?tracker_debug=1` and the GA4 debug extension.
 
 ## 2. Google Ads conversions
@@ -47,14 +49,19 @@ Pick **one** source per conversion so nothing counts twice:
   action → **Tag setup → Use Google Tag Manager** (or *Install the tag yourself*) to read the **Conversion
   ID** (`AW-123456789`) and **Conversion label**. Then:
   - Google tag route: `--conversion generate_lead=AW-123456789/<label>:<value>:<currency>` in
-    `prepare_site.py` (static or embed). For Route B the AW- ID must be a destination of the Google tag
-    connected in Wix (Google tag settings → *Manage destinations*/*combine*).
+    `prepare_site.py` (static or embed). The `send_to` call loads the AW- destination by itself, but also add the
+    Ads account as a **destination of the Google tag** (Google tag settings → destinations / *combine*): then the
+    ad click is stored (`_gcl_*`) on every landing page, so conversions on later pages keep their gclid.
   - GTM route: a *Google Ads Conversion Tracking* tag (section 3).
 - **Calls:** a separate conversion on `contact_click` with `contact_method = phone` measures click-to-call
   from the site. (Calls from call assets in the ads themselves are configured in Google Ads, not here.)
 
-**Enhanced conversions** (more matched conversions, especially on Safari/iOS): run `prepare_site.py` with
-`--enhanced-conversions` (and `--parent-origin` for Route B). In Google Ads: **Goals → Conversions →
+**Enhanced conversions** (more matched conversions, especially on Safari/iOS). Decide with the user; all of
+these must be true: the setting is turned on in Google Ads, the customer-data terms are accepted, the page
+links a privacy policy that mentions sharing hashed contact data with Google, and consent rules are met
+(GDPR/Law 25). A local test cannot prove it works (it depends on the Ads account); check the conversion
+action's diagnostics after real traffic. Then run `prepare_site.py` with `--enhanced-conversions` (and
+`--parent-origin` for Route B). In Google Ads: **Goals → Conversions →
 Settings → Enhanced conversions → Turn on**, method *Google tag* or *Google Tag Manager*, and choose the
 *code / data layer* option. The tracker sends `user_data` with `sha256_email_address` /
 `sha256_phone_number`, normalised per Google's rules (lowercase, Gmail dots removed, E.164 phone). The
@@ -79,11 +86,17 @@ whose parameters are top-level keys (cleared between events).
    Some Custom Events*: `DLV - event_source` *matches RegEx* `^html_`. Name it `html-tracker - all`.
    Make one more Custom Event trigger `generate_lead` (event name exactly) for conversions.
 3. **Tags:**
-   - *Google tag* with your `G-` ID on **Initialization – All Pages** (on Wix, connecting GTM in Marketing
-     Integrations does not load GA4 by itself; this tag does).
+   - *Google tag* with your `G-` ID on **Initialization – All Pages**. Connecting GTM in Wix Marketing
+     Integrations does not load GA4 by itself; this tag does.
+     - **Route A (static pages):** leave page views on (default). Each page is a real page load.
+     - **Route B / any Wix editor site** (Wix's *Setting Up Google Tag Manager with Wix*): Wix is a single-page
+       app and pushes a `Pageview` event to the dataLayer on every page change. Add configuration parameter
+       `send_page_view` = `false` to the Google tag, create a *GA4 Event* tag named `page_view` fired by a
+       **Custom Event** trigger `Pageview`, and never use the built-in *All Pages* trigger for page views.
    - *Google Analytics: GA4 Event*: Measurement ID = your `G-` ID, **Event name** `{{Event}}`, **Event
      parameters**: one row per DLV above (`click_text` → `{{DLV - click_text}}`…). Trigger: `html-tracker - all`.
-   - *Conversion Linker* on All Pages (needed for Ads conversions through GTM).
+   - *Conversion Linker* (needed for Ads conversions through GTM): All Pages on Route A; on a Wix editor site
+     fire it on the `Pageview` custom event, as Wix's Google Ads conversion article does.
    - *Google Ads Conversion Tracking*: Conversion ID + Label, Conversion value `{{DLV - value}}`, Currency code
      `{{DLV - currency}}`; tick **Include user-provided data from your website** → New variable →
      *User-Provided Data* → *Code* → `{{DLV - user_data}}`. Trigger: `generate_lead`.
@@ -95,16 +108,19 @@ whose parameters are top-level keys (cleared between events).
   (`CA-QC`, Law 25), granted elsewhere, with `ads_data_redaction` and `url_passthrough` so ad clicks still
   count without cookies. Change with `--consent-regions` / `--consent-default denied`. This is a sensible
   default, not legal advice: the site owner decides with their privacy counsel.
-- To show a banner on a Route A site, enable Wix's cookie banner for that project (Privacy center); the
-  injected bridge turns the visitor's choice into `gtag('consent','update')`. With your own CMP (e.g. a GTM
-  consent template) use `--no-consent` so defaults are not set twice.
+- A Route A site shows Wix's banner only when the project's consent policy requires one (none by default).
+  If visitors from denied regions matter, set that up (Wix cookie-banner settings / *Update Consent Policy*
+  API) and confirm the banner appears on the live site; the injected bridge turns the visitor's choice into
+  `gtag('consent','update')`. Or use your own CMP (e.g. a GTM consent template) with `--no-consent` so
+  defaults are not set twice. Without any banner those visitors stay denied (cookieless pings only).
 - Route B uses the Wix site's own cookie banner and integrations; mark the listener's Custom Code as
   *Analytics* so it follows the banner.
 - In Tag Assistant the **Consent** tab shows the default and update states for each hit.
 
 ## 5. Verification checklist (do it after every publish)
 
-- `verify_live.py` and `browser_check.js` (see `route-a-static-hosting.md`) — no FAIL lines.
+- Route A: `verify_live.py` and `browser_check.js --submit`; Route B: `simulate_embed.js` before installing and
+  `browser_check.js` on the Wix page after — no FAIL lines, and no "container sent NO hits" warning.
 - Tag Assistant: one GA4 configuration, one GTM container; events `cta_click`, `scroll_depth`,
   `generate_lead` fire with `event_source`; in Route B with the Wix page URL as `page_location`.
 - GA4 DebugView: events arrive with parameters; `generate_lead` flagged as key event.
