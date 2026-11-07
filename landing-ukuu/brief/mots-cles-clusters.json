@@ -1,0 +1,905 @@
+{
+ "A. Servicio: coaching profesional / laboral / de carrera (online)": {
+  "volume": 1890.0,
+  "keywords": [
+   {
+    "kw": "asesor de carrera",
+    "vol": 30.0,
+    "three_m": "0%",
+    "yoy": "-25%",
+    "comp": "Medium",
+    "idx": "46",
+    "bid_low": 947.65,
+    "bid_high": 7326.2,
+    "in_account": false
+   },
+   {
+    "kw": "asesoría de carrera",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "coach laboral online",
+    "vol": 20.0,
+    "three_m": "0%",
+    "yoy": "-91%",
+    "comp": "Low",
+    "idx": "17",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "coaching de carrera",
+    "vol": 40.0,
+    "three_m": "-25%",
+    "yoy": "-25%",
+    "comp": "Medium",
+    "idx": "39",
+    "bid_low": 2107.81,
+    "bid_high": 12196.8,
+    "in_account": true
+   },
+   {
+    "kw": "coaching de carrera online",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "coaching individual para profesionales",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "coaching laboral",
+    "vol": 880.0,
+    "three_m": "0%",
+    "yoy": "-55%",
+    "comp": "Medium",
+    "idx": "56",
+    "bid_low": 1782.46,
+    "bid_high": 7931.66,
+    "in_account": true
+   },
+   {
+    "kw": "coaching para profesionales con experiencia",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "coaching profesional",
+    "vol": 880.0,
+    "three_m": "0%",
+    "yoy": "-62%",
+    "comp": "Medium",
+    "idx": "40",
+    "bid_low": 2809.17,
+    "bid_high": 14570.43,
+    "in_account": true
+   },
+   {
+    "kw": "coaching profesional online",
+    "vol": 40.0,
+    "three_m": "0%",
+    "yoy": "-78%",
+    "comp": "High",
+    "idx": "72",
+    "bid_low": 4719.07,
+    "bid_high": 24179.3,
+    "in_account": false
+   },
+   {
+    "kw": "sesiones de coaching profesional",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   }
+  ]
+ },
+ "B. Precio / consideración": {
+  "volume": 0,
+  "keywords": [
+   {
+    "kw": "coaching de carrera precio",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "cuánto cuesta un coach de carrera",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   }
+  ]
+ },
+ "C. Reorientación / transición / cambio de carrera": {
+  "volume": 1130.0,
+  "keywords": [
+   {
+    "kw": "asesoría para cambio de carrera",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "cambio de carrera profesional",
+    "vol": 10.0,
+    "three_m": "0%",
+    "yoy": "-50%",
+    "comp": "Low",
+    "idx": "29",
+    "bid_low": 3509.04,
+    "bid_high": 15778.67,
+    "in_account": false
+   },
+   {
+    "kw": "cambio de rumbo profesional",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "coaching para cambiar de carrera",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "coaching para cambiar de trabajo",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "coaching para transición profesional",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "cómo cambiar de carrera profesional",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "cómo cambiar de profesión",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "cómo cambiar de trabajo sin empezar de cero",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "cómo dar un giro profesional",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "cómo planear un cambio de carrera",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "orientación profesional para cambiar de carrera",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "reorientación profesional",
+    "vol": 1000.0,
+    "three_m": "108%",
+    "yoy": "-47%",
+    "comp": "Low",
+    "idx": "11",
+    "bid_low": 1179.95,
+    "bid_high": 13639.9,
+    "in_account": false
+   },
+   {
+    "kw": "transición de carrera",
+    "vol": 20.0,
+    "three_m": "0%",
+    "yoy": "0%",
+    "comp": "Low",
+    "idx": "3",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "transición laboral",
+    "vol": 70.0,
+    "three_m": "40%",
+    "yoy": "-36%",
+    "comp": "Low",
+    "idx": "2",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "transición profesional",
+    "vol": 30.0,
+    "three_m": "100%",
+    "yoy": "33%",
+    "comp": "Low",
+    "idx": "0",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   }
+  ]
+ },
+ "D. Edad: cambiar a los 35 / 40 / 45 / 50": {
+  "volume": 300.0,
+  "keywords": [
+   {
+    "kw": "cambiar de carrera a los 35",
+    "vol": 10.0,
+    "three_m": "0%",
+    "yoy": "0%",
+    "comp": "Low",
+    "idx": "0",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "cambiar de carrera a los 40",
+    "vol": 10.0,
+    "three_m": "0%",
+    "yoy": "0%",
+    "comp": "Low",
+    "idx": "16",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "cambiar de carrera a los 45",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "cambiar de carrera a los 50",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "cambiar de profesión a los 40",
+    "vol": 30.0,
+    "three_m": "50%",
+    "yoy": "-40%",
+    "comp": "Medium",
+    "idx": "34",
+    "bid_low": 2931.56,
+    "bid_high": 7886.33,
+    "in_account": false
+   },
+   {
+    "kw": "cambiar de trabajo a los 40",
+    "vol": 110.0,
+    "three_m": "0%",
+    "yoy": "-73%",
+    "comp": "Low",
+    "idx": "18",
+    "bid_low": 1875.9,
+    "bid_high": 7948.58,
+    "in_account": false
+   },
+   {
+    "kw": "cambiar de trabajo a los 50",
+    "vol": 140.0,
+    "three_m": "22%",
+    "yoy": "-58%",
+    "comp": "Low",
+    "idx": "16",
+    "bid_low": 1146.74,
+    "bid_high": 7660.61,
+    "in_account": false
+   },
+   {
+    "kw": "crisis profesional a los 40",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "cómo encontrar mi vocación siendo adulto",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "orientación laboral para adultos",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "orientación profesional a los 40",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "orientación profesional para adultos",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   }
+  ]
+ },
+ "E. Estancamiento / desconexión / dudas": {
+  "volume": 90.0,
+  "keywords": [
+   {
+    "kw": "crisis de carrera profesional",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "cómo saber si debo cambiar de trabajo",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "cómo salir del estancamiento profesional",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "estancamiento laboral",
+    "vol": 40.0,
+    "three_m": "33%",
+    "yoy": "-20%",
+    "comp": "Low",
+    "idx": "0",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "estancamiento profesional",
+    "vol": 20.0,
+    "three_m": "-50%",
+    "yoy": "-75%",
+    "comp": "Low",
+    "idx": "0",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "me siento estancado en mi trabajo",
+    "vol": 10.0,
+    "three_m": "100%",
+    "yoy": "100%",
+    "comp": "Low",
+    "idx": "0",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "mi trabajo ya no me motiva",
+    "vol": 10.0,
+    "three_m": "0%",
+    "yoy": "0%",
+    "comp": "Low",
+    "idx": "0",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "mi trabajo ya no me satisface",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "no me siento realizado en mi trabajo",
+    "vol": 10.0,
+    "three_m": "0%",
+    "yoy": "0%",
+    "comp": "Low",
+    "idx": "5",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "no sé hacia dónde orientar mi carrera",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "no sé qué hacer con mi vida profesional",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "perdí la motivación en el trabajo",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "quiero cambiar de trabajo pero no sé qué hacer",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "qué hacer si ya no me gusta mi profesión",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   }
+  ]
+ },
+ "F. Confianza / miedo a decidir": {
+  "volume": 10.0,
+  "keywords": [
+   {
+    "kw": "coaching para recuperar la confianza",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "cómo confiar en mis capacidades profesionales",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "cómo recuperar la confianza en el trabajo",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "cómo sentirme más seguro en mi trabajo",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "cómo superar el miedo a cambiar de carrera",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "quiero cambiar de profesión pero tengo miedo",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "tengo miedo de cambiar de trabajo",
+    "vol": 10.0,
+    "three_m": "0%",
+    "yoy": "0%",
+    "comp": "Low",
+    "idx": "3",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   }
+  ]
+ },
+ "G. Propósito / autoconocimiento / fortalezas / valores": {
+  "volume": 150.0,
+  "keywords": [
+   {
+    "kw": "autoconocimiento profesional",
+    "vol": 30.0,
+    "three_m": "300%",
+    "yoy": "0%",
+    "comp": "Low",
+    "idx": "0",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "coaching de fortalezas",
+    "vol": 30.0,
+    "three_m": "0%",
+    "yoy": "-60%",
+    "comp": "High",
+    "idx": "74",
+    "bid_low": 5349.65,
+    "bid_high": 13322.21,
+    "in_account": false
+   },
+   {
+    "kw": "cómo alinear mi trabajo con mis valores",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "cómo definir mi rumbo profesional",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "cómo encontrar mi propósito profesional",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "cómo identificar mis fortalezas profesionales",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "propósito profesional",
+    "vol": 90.0,
+    "three_m": "-20%",
+    "yoy": "-43%",
+    "comp": "Low",
+    "idx": "1",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   }
+  ]
+ },
+ "H. Liderazgo personal / desarrollo profesional": {
+  "volume": 590.0,
+  "keywords": [
+   {
+    "kw": "coaching de liderazgo personal",
+    "vol": 10.0,
+    "three_m": "0%",
+    "yoy": "∞",
+    "comp": "High",
+    "idx": "86",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "desarrollo profesional y personal",
+    "vol": 260.0,
+    "three_m": "129%",
+    "yoy": "-64%",
+    "comp": "Low",
+    "idx": "1",
+    "bid_low": 1732.08,
+    "bid_high": 6401.15,
+    "in_account": true
+   },
+   {
+    "kw": "liderazgo personal",
+    "vol": 320.0,
+    "three_m": "23%",
+    "yoy": "-33%",
+    "comp": "Low",
+    "idx": "7",
+    "bid_low": 702.39,
+    "bid_high": 4429.66,
+    "in_account": false
+   }
+  ]
+ },
+ "I. Decisiones / plan de carrera": {
+  "volume": 10.0,
+  "keywords": [
+   {
+    "kw": "coaching para tomar decisiones",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "cómo decidir mi futuro profesional",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "cómo definir mis objetivos profesionales",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "cómo planificar mi carrera profesional",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "cómo tomar decisiones profesionales",
+    "vol": null,
+    "three_m": "",
+    "yoy": "",
+    "comp": "",
+    "idx": "",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   },
+   {
+    "kw": "plan de carrera personal",
+    "vol": 10.0,
+    "three_m": "0%",
+    "yoy": "-86%",
+    "comp": "Low",
+    "idx": "0",
+    "bid_low": null,
+    "bid_high": null,
+    "in_account": false
+   }
+  ]
+ }
+}
