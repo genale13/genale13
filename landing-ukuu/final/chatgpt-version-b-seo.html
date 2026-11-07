@@ -361,6 +361,282 @@ textarea.field__input { min-height: 110px; resize: vertical; }
 @media (max-width: 760px) { .has-sticky-cta .wa-float { bottom: calc(96px + env(safe-area-inset-bottom, 0px)); } }
 .mini-steps--row { grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 1.25rem; }
 .mini-steps--row li { padding: 1.25rem; background: var(--white); border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+/* ==========================================================================
+   Interacción y movimiento
+   - Efectos de puntero (hover, inclinación, brillo) solo en escritorio.
+   - Todo se desactiva con «reducir movimiento» del sistema.
+   ========================================================================== */
+@keyframes rise { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+@keyframes fade-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes draw { from { background-size: 0 .32em; } to { background-size: 100% .32em; } }
+@keyframes drift { 0% { transform: translate3d(0, 0, 0) scale(1); } 50% { transform: translate3d(4rem, 2.5rem, 0) scale(1.08); } 100% { transform: translate3d(-3rem, 3.5rem, 0) scale(.95); } }
+@keyframes pulse-dot { 0%, 100% { box-shadow: 0 0 0 3px rgba(242, 154, 46, .28); } 50% { box-shadow: 0 0 0 8px rgba(242, 154, 46, 0); } }
+@keyframes sun-glow { 0%, 100% { box-shadow: 0 0 0 10px rgba(242, 154, 46, .16), 0 0 50px rgba(242, 154, 46, .5); } 50% { box-shadow: 0 0 0 18px rgba(242, 154, 46, .08), 0 0 80px rgba(242, 154, 46, .75); } }
+@keyframes auto-shine { 0%, 78% { transform: translateX(-130%); } 100% { transform: translateX(130%); } }
+@keyframes marquee { to { transform: translateX(-50%); } }
+@keyframes spin-border { to { --angle: 360deg; } }
+@keyframes pop-in { from { opacity: 0; transform: translateY(16px) scale(.9); } to { opacity: 1; transform: none; } }
+@keyframes ring { 0% { box-shadow: 0 0 0 0 rgba(242, 154, 46, .55); } 100% { box-shadow: 0 0 0 14px rgba(242, 154, 46, 0); } }
+@property --angle { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+
+/* Entrada de la portada */
+.hero__content > * { animation: rise .8s cubic-bezier(.16, 1, .3, 1) backwards; }
+.hero__content > *:nth-child(2) { animation-delay: .07s; }
+.hero__content > *:nth-child(3) { animation-delay: .14s; }
+.hero__content > *:nth-child(4) { animation-delay: .21s; }
+.hero__content > *:nth-child(5) { animation-delay: .28s; }
+.hero__content > *:nth-child(6) { animation-delay: .35s; }
+.hero .lead-box, .hero .route-card { animation: rise .9s .2s cubic-bezier(.16, 1, .3, 1) backwards; }
+.hero .lead-box.glow-border { animation: rise .9s .2s cubic-bezier(.16, 1, .3, 1) backwards, spin-border 8s linear infinite; }
+.hl { animation: draw 1.1s .55s cubic-bezier(.65, 0, .35, 1) backwards; }
+.ticker__dot, .pill::before { animation: pulse-dot 2.6s ease-in-out infinite; }
+
+/* Luces en degradado de la portada */
+.hero { isolation: isolate; }
+.hero > .container { position: relative; z-index: 1; }
+.aurora { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.aurora__blob { position: absolute; width: 40rem; height: 40rem; border-radius: 50%; filter: blur(70px); opacity: .6; animation: drift 22s ease-in-out infinite alternate; }
+.aurora__blob--sun { top: -20rem; right: -12rem; background: radial-gradient(circle, rgba(242, 154, 46, .5), transparent 65%); }
+.aurora__blob--jade { bottom: -22rem; left: -14rem; background: radial-gradient(circle, rgba(111, 175, 152, .55), transparent 65%); animation-duration: 27s; }
+.aurora__blob--gold { top: 28%; left: 38%; width: 26rem; height: 26rem; background: radial-gradient(circle, rgba(227, 163, 59, .32), transparent 65%); animation-duration: 33s; animation-direction: alternate-reverse; }
+@media (max-width: 760px) { .aurora__blob { width: 24rem; height: 24rem; filter: blur(50px); } }
+
+/* Foco de luz que sigue al puntero */
+.spotlight { position: relative; }
+.spotlight::after { content: ""; position: absolute; inset: 0; z-index: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .4s ease; background: radial-gradient(520px circle at var(--mx, 50%) var(--my, 0%), rgba(242, 154, 46, .14), transparent 45%); }
+.spotlight.is-lit::after { opacity: 1; }
+.section--night.spotlight::after, .practice.spotlight::after, .selector__panel.spotlight::after { background: radial-gradient(560px circle at var(--mx, 50%) var(--my, 0%), rgba(242, 154, 46, .18), rgba(111, 175, 152, .08) 30%, transparent 55%); }
+.section--night > .container, .practice > *, .cta-band > *, .selector__panel > * { position: relative; z-index: 1; }
+
+/* Botones: rebote y brillo */
+.btn { position: relative; overflow: hidden; isolation: isolate; transition: transform .25s cubic-bezier(.34, 1.56, .64, 1), box-shadow .25s ease, background-color .2s ease, border-color .2s ease; }
+.btn::after { content: ""; position: absolute; inset: -2px; z-index: -1; pointer-events: none; transform: translateX(-130%); background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, .6) 50%, transparent 65%); }
+.btn--ghost::after { background: linear-gradient(115deg, transparent 35%, rgba(111, 175, 152, .28) 50%, transparent 65%); }
+.btn--shine::after { animation: auto-shine 6s ease-in-out infinite; }
+.btn:active { transform: translateY(0) scale(.97); }
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover { transform: translateY(-3px) scale(1.03); }
+  .btn:hover::after { transform: translateX(130%); transition: transform .8s ease; animation: none; }
+  .btn--primary:hover { box-shadow: 0 20px 38px -14px rgba(242, 154, 46, .85); }
+}
+
+/* Tarjetas con inclinación y reflejo */
+.tilt { position: relative; transform-style: preserve-3d; transition: transform .35s cubic-bezier(.16, 1, .3, 1), box-shadow .35s ease, border-color .35s ease; }
+.tilt::before { content: ""; position: absolute; inset: 0; z-index: 2; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .35s ease; background: radial-gradient(380px circle at var(--gx, 50%) var(--gy, 50%), rgba(255, 255, 255, .5), transparent 45%); mix-blend-mode: soft-light; }
+.tilt.is-tilting { transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(-4px); box-shadow: var(--shadow-md); }
+.tilt.is-tilting::before { opacity: 1; }
+.card--night.tilt::before { background: radial-gradient(380px circle at var(--gx, 50%) var(--gy, 50%), rgba(242, 154, 46, .3), rgba(111, 175, 152, .12) 35%, transparent 55%); mix-blend-mode: screen; }
+
+/* Aparición al hacer scroll (solo si el navegador lo permite) */
+.fx .reveal { transition: opacity .8s cubic-bezier(.16, 1, .3, 1), transform .8s cubic-bezier(.16, 1, .3, 1); transition-delay: var(--delay, 0s); }
+.fx .reveal:not(.is-visible) { opacity: 0; transform: translateY(24px); }
+
+/* Cabecera al hacer scroll y navegación */
+.site-header { transition: box-shadow .3s ease, background-color .3s ease; }
+.site-header.is-scrolled { box-shadow: 0 12px 30px -20px rgba(31, 45, 40, .45); background: rgba(251, 246, 236, .97); }
+.site-nav__link { position: relative; }
+.site-nav__link::after { content: ""; position: absolute; left: 0; right: 0; bottom: -6px; height: 2px; border-radius: 2px; background: linear-gradient(90deg, var(--ukuu-jade), var(--ukuu-sun)); transform: scaleX(0); transform-origin: left; transition: transform .3s cubic-bezier(.16, 1, .3, 1); }
+.site-nav__link:hover::after { transform: scaleX(1); }
+.site-header__logo img { transition: transform .4s cubic-bezier(.34, 1.56, .64, 1); }
+@media (hover: hover) and (pointer: fine) { .site-header__logo:hover img { transform: scale(1.05) rotate(-1deg); } }
+
+/* Formulario y autodiagnóstico con borde de luz */
+.glow-border { border: 2px solid transparent; background: linear-gradient(var(--white), var(--white)) padding-box, conic-gradient(from var(--angle), var(--ukuu-jade), var(--ukuu-gold), var(--ukuu-sun), rgba(111, 175, 152, .35), var(--ukuu-jade)) border-box; animation: spin-border 8s linear infinite; }
+.field__input.is-prefilled { animation: ring 1.2s ease-out 2; border-color: var(--ukuu-sun); background: var(--white); }
+
+/* Cifras */
+.facts { position: relative; z-index: 2; margin-top: calc(-1 * clamp(2rem, 4vw, 3rem)); animation: rise .9s .35s cubic-bezier(.16, 1, .3, 1) backwards; }
+.facts__grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); overflow: hidden; background: var(--white); border: 1px solid var(--line); border-radius: var(--radius-xl); box-shadow: var(--shadow-md); }
+.fact { display: grid; gap: .3rem; align-content: start; padding: 1.25rem 1.5rem; border-left: 1px solid var(--line); transition: background-color .3s ease; }
+.fact:first-child { border-left: 0; }
+.fact__num { font-family: var(--font-display); font-size: clamp(1.9rem, 1.4rem + 1.5vw, 2.6rem); font-weight: 800; line-height: 1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; background: linear-gradient(90deg, var(--jade-deep), var(--gold-deep)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.fact__label { font-size: var(--fs-small); color: var(--ink-soft); }
+@media (hover: hover) and (pointer: fine) { .fact:hover { background: linear-gradient(180deg, rgba(242, 154, 46, .07), rgba(111, 175, 152, .07)); } }
+@media (max-width: 760px) {
+  .facts__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fact { padding: 1rem 1.1rem; }
+  .fact:nth-child(3) { border-left: 0; }
+  .fact:nth-child(n+3) { border-top: 1px solid var(--line); }
+}
+
+.grid--five { align-items: start; }
+
+/* Selector «¿Te reconoces?» */
+.selector { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(1.25rem, 3vw, 2.5rem); align-items: start; }
+@media (max-width: 900px) { .selector { grid-template-columns: minmax(0, 1fr); } }
+.selector__options { display: grid; gap: .7rem; }
+.selector__option { position: relative; display: grid; gap: .2rem; padding: 1rem 1.25rem 1rem 3.3rem; text-align: left; font: inherit; color: var(--ink); background: var(--white); border: 1.5px solid var(--line); border-radius: var(--radius-lg); cursor: pointer; transition: border-color .25s ease, box-shadow .25s ease, transform .25s cubic-bezier(.34, 1.56, .64, 1), background-color .25s ease; }
+.selector__option::after { content: ""; position: absolute; left: 1.2rem; top: 50%; width: 1.15rem; height: 1.15rem; margin-top: -.575rem; border: 2px solid var(--line-strong); border-radius: 50%; background: var(--white); transition: all .25s ease; }
+.selector__option[aria-pressed="true"] { border-color: var(--ukuu-sun); background: linear-gradient(135deg, rgba(242, 154, 46, .09), rgba(111, 175, 152, .09)); box-shadow: 0 12px 28px -16px rgba(242, 154, 46, .7); }
+.selector__option[aria-pressed="true"]::after { background: var(--ukuu-sun); border-color: var(--ukuu-sun); box-shadow: 0 0 0 5px var(--sun-tint), 0 0 18px rgba(242, 154, 46, .6); }
+.selector__quote { font-family: var(--font-display); font-size: 1.15rem; font-weight: 600; line-height: 1.3; }
+@media (hover: hover) and (pointer: fine) { .selector__option:hover { transform: translateX(6px); border-color: var(--line-strong); box-shadow: var(--shadow-sm); } }
+.selector__panel { position: sticky; top: 104px; display: grid; gap: 1rem; min-height: 22rem; padding: clamp(1.5rem, 3vw, 2.25rem); border-radius: var(--radius-xl); color: var(--ukuu-cream); background: radial-gradient(26rem 18rem at 100% 0%, rgba(242, 154, 46, .22), transparent 60%), radial-gradient(24rem 18rem at 0% 100%, rgba(111, 175, 152, .2), transparent 60%), var(--jade-night); box-shadow: var(--shadow-md); }
+@media (max-width: 900px) { .selector__panel { position: static; min-height: 0; } }
+.selector__empty { display: grid; gap: 1rem; place-content: center; justify-items: center; text-align: center; min-height: 18rem; color: var(--on-night-soft); }
+.selector__sun { width: 64px; height: 64px; border-radius: 50%; background: var(--ukuu-sun); animation: sun-glow 3.4s ease-in-out infinite; }
+.selector__answer { display: grid; gap: 1rem; align-content: start; animation: fade-up .45s ease both; }
+.selector__answer-label { font-family: var(--font-mono); font-size: .75rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--ukuu-gold); }
+.selector__answer h3 { font-size: clamp(1.35rem, 1.1rem + .9vw, 1.75rem); color: var(--ukuu-cream); }
+.selector__answer p { color: var(--on-night); }
+.selector__hint { font-size: var(--fs-xsmall); color: var(--on-night-soft); }
+.tags { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: .5rem; }
+.tags li { padding: .3rem .75rem; border: 1px solid rgba(227, 163, 59, .38); border-radius: 999px; background: rgba(227, 163, 59, .1); font-family: var(--font-mono); font-size: .72rem; font-weight: 600; letter-spacing: .04em; color: var(--ukuu-gold); }
+.tags--light li { color: var(--gold-deep); border-color: rgba(143, 94, 16, .25); background: var(--gold-tint); }
+
+/* Botón «Ver más» y paneles desplegables */
+.more-btn { display: inline-flex; align-items: center; gap: .5rem; justify-self: start; padding: .35rem 0; text-align: left; border: 0; background: none; font: inherit; font-size: .9rem; font-weight: 700; color: var(--jade-deep); cursor: pointer; }
+.more-btn::after { content: ""; width: .45rem; height: .45rem; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg) translate(-2px, -2px); transition: transform .3s cubic-bezier(.16, 1, .3, 1); }
+.more-btn[aria-expanded="true"]::after { transform: rotate(-135deg) translate(-2px, -2px); }
+.more-btn:hover { text-decoration: underline; text-underline-offset: .2em; }
+.card--night .more-btn { color: var(--ukuu-gold); }
+.more-panel { display: grid; gap: .75rem; }
+.more-panel:not([hidden]) { animation: fade-up .4s ease both; }
+.card--night .more-panel { padding-top: .75rem; border-top: 1px solid rgba(111, 175, 152, .22); color: var(--on-night); }
+
+/* Proceso interactivo */
+.path--interactive::before { background: var(--line-strong); }
+.path--interactive::after { content: ""; position: absolute; left: 1.2rem; top: .8rem; bottom: .8rem; width: 3px; border-radius: 3px; background: linear-gradient(180deg, var(--ukuu-jade), var(--ukuu-gold) 72%, var(--ukuu-sun)); transform: translateX(-50%) scaleY(var(--fill, 0)); transform-origin: top; }
+.path--interactive .path__step::before { transition: background-color .3s ease, color .3s ease, box-shadow .3s ease, border-color .3s ease; }
+.path--interactive .path__step.is-open::before { background: var(--ukuu-jade); border-color: var(--ukuu-jade); color: var(--ink); box-shadow: 0 0 0 6px var(--jade-tint); }
+.path--interactive .path__step:last-child.is-open::before { background: var(--ukuu-sun); border-color: var(--ukuu-sun); animation: sun-glow 3.4s ease-in-out infinite; }
+.path__toggle { display: grid; gap: .25rem; width: 100%; padding: .1rem 0; text-align: left; font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+.path__toggle .path__title { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 0; transition: color .2s ease; }
+.path__toggle .path__title::after { content: ""; flex: none; width: .5rem; height: .5rem; border-right: 2px solid var(--jade-deep); border-bottom: 2px solid var(--jade-deep); transform: rotate(45deg); transition: transform .3s cubic-bezier(.16, 1, .3, 1); }
+.path__toggle[aria-expanded="true"] .path__title::after { transform: rotate(-135deg); }
+.path__toggle:hover .path__title { color: var(--jade-deep); }
+.path__detail { display: grid; gap: .5rem; margin-top: .75rem; padding: 1rem 1.15rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); box-shadow: var(--shadow-sm); color: var(--ink-soft); }
+.path__detail strong { color: var(--ink); }
+.path__detail:not([hidden]) { animation: fade-up .35s ease both; }
+.section--white .path__detail { background: var(--ukuu-cream); }
+.route-card .path__step a { color: inherit; text-decoration: none; display: block; border-radius: 10px; transition: background-color .2s ease, transform .2s ease; }
+.route-card .path__step a:hover { background: var(--jade-tint); transform: translateX(4px); }
+
+/* Pestañas */
+.tabs { display: grid; gap: 1rem; }
+.tabs__list { display: flex; gap: .35rem; padding: .3rem; overflow-x: auto; scrollbar-width: none; border-radius: 999px; background: rgba(255, 255, 255, .08); border: 1px solid rgba(111, 175, 152, .22); }
+.tabs__list::-webkit-scrollbar { display: none; }
+.practice .tabs__list { flex-wrap: wrap; border-radius: 18px; }
+@media (max-width: 760px) { .tabs--light .tabs__list { -webkit-mask-image: linear-gradient(90deg, #000 80%, transparent); mask-image: linear-gradient(90deg, #000 80%, transparent); } }
+.tabs__tab { flex: none; padding: .5rem 1rem; border: 0; border-radius: 999px; background: transparent; font: inherit; font-size: .875rem; font-weight: 600; color: var(--on-night-soft); cursor: pointer; transition: background-color .25s ease, color .25s ease, box-shadow .25s ease; }
+.tabs__tab:hover { color: var(--ukuu-cream); }
+.tabs__tab[aria-selected="true"] { background: var(--ukuu-cream); color: var(--ink); box-shadow: 0 6px 18px -8px rgba(0, 0, 0, .45); }
+.tabs__panel { display: grid; gap: .75rem; color: var(--on-night); }
+.tabs__panel:not([hidden]) { animation: fade-up .35s ease both; }
+.tabs__panel:focus-visible { outline-offset: 6px; }
+.tabs--light .tabs__list { background: var(--white); border-color: var(--line); box-shadow: var(--shadow-sm); }
+.tabs--light .tabs__tab { color: var(--ink-soft); }
+.tabs--light .tabs__tab:hover { color: var(--jade-deep); }
+.tabs--light .tabs__tab[aria-selected="true"] { background: var(--jade-deep); color: var(--ukuu-cream); }
+.tabs--light .tabs__panel { color: var(--ink-soft); }
+.topic-panel { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: clamp(1rem, 4vw, 3rem); padding: clamp(1.5rem, 3.5vw, 2.75rem); border: 1px solid var(--line); border-radius: var(--radius-xl); background: var(--white); box-shadow: var(--shadow-sm); }
+.topic-panel__head { display: grid; gap: 1rem; align-content: start; }
+.topic-panel__head h3 { font-size: clamp(1.45rem, 1.15rem + 1.1vw, 2rem); color: var(--ink); }
+.topic-panel__body { display: grid; gap: 1rem; }
+.topic-panel__body ul { padding-left: 1.25rem; display: grid; gap: .45rem; }
+.topic-panel__body ul li::marker { color: var(--ukuu-sun); }
+.topic-panel__body h4 { font-size: 1.05rem; color: var(--ink); }
+@media (max-width: 880px) { .topic-panel { grid-template-columns: minmax(0, 1fr); } }
+
+/* Banda de temas en movimiento */
+.marquee { overflow: hidden; padding-block: 1.1rem; color: var(--ukuu-cream); background: linear-gradient(90deg, var(--jade-night), var(--jade-deep), var(--jade-night)); -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); }
+.marquee__track { display: flex; width: max-content; animation: marquee 42s linear infinite; }
+.marquee__group { display: flex; flex: none; }
+.marquee__item { display: inline-flex; align-items: center; gap: 2.25rem; padding-right: 2.25rem; font-family: var(--font-display); font-size: 1.15rem; font-weight: 600; white-space: nowrap; }
+.marquee__item::after { content: ""; width: .5rem; height: .5rem; border-radius: 50%; background: var(--ukuu-sun); box-shadow: 0 0 14px rgba(242, 154, 46, .85); }
+.marquee:hover .marquee__track { animation-play-state: paused; }
+
+/* Autodiagnóstico */
+.quiz { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: clamp(1.5rem, 4vw, 3rem); padding: clamp(1.5rem, 4vw, 3rem); border-radius: var(--radius-xl); box-shadow: var(--shadow-md); }
+@media (max-width: 900px) { .quiz { grid-template-columns: minmax(0, 1fr); } }
+.quiz__intro { display: grid; gap: 1rem; align-content: start; }
+.quiz__body { display: grid; gap: 1rem; align-content: start; min-height: 20rem; }
+.quiz__meta { display: grid; gap: .5rem; }
+.quiz__progress { height: 6px; overflow: hidden; border-radius: 999px; background: var(--jade-tint); }
+.quiz__progress span { display: block; width: var(--p, 33%); height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--ukuu-jade), var(--ukuu-gold), var(--ukuu-sun)); transition: width .5s cubic-bezier(.16, 1, .3, 1); }
+.quiz__count { font-family: var(--font-mono); font-size: .75rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
+.quiz__step { display: grid; gap: .8rem; min-width: 0; margin: 0; padding: 0; border: 0; }
+.quiz__step:not([hidden]) { animation: fade-up .35s ease both; }
+.quiz__step legend { padding: 0; margin-bottom: .4rem; font-family: var(--font-display); font-size: 1.35rem; font-weight: 700; line-height: 1.25; }
+.quiz__options { display: grid; gap: .6rem; }
+.quiz__option { padding: 1rem 1.15rem; text-align: left; font: inherit; font-weight: 600; color: var(--ink); background: var(--ukuu-cream); border: 1.5px solid var(--line-strong); border-radius: var(--radius); cursor: pointer; transition: border-color .2s ease, transform .25s cubic-bezier(.34, 1.56, .64, 1), background-color .2s ease, box-shadow .2s ease; }
+@media (hover: hover) and (pointer: fine) { .quiz__option:hover { transform: translateX(6px); border-color: var(--ukuu-sun); background: var(--white); box-shadow: var(--shadow-sm); } }
+.quiz__back { justify-self: start; padding: 0; border: 0; background: none; font: inherit; font-size: .875rem; font-weight: 600; color: var(--jade-deep); cursor: pointer; }
+.quiz__result { display: grid; gap: .9rem; animation: fade-up .45s ease both; }
+.quiz__result-label { font-family: var(--font-mono); font-size: .75rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--gold-deep); }
+.quiz__result-title { font-size: clamp(1.4rem, 1.15rem + 1vw, 1.85rem); }
+.quiz__result-quote { font-family: var(--font-display); font-size: 1.1rem; font-weight: 600; color: var(--jade-deep); }
+.quiz__result-text { color: var(--ink-soft); }
+.quiz__actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+
+/* Para quién es */
+.fit-more { border: 1px dashed var(--line-strong); border-radius: var(--radius-lg); background: rgba(255, 255, 255, .5); }
+.fit-more summary { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1rem 1.25rem; font-family: var(--font-display); font-weight: 600; cursor: pointer; list-style: none; }
+.fit-more summary::-webkit-details-marker { display: none; }
+.fit-more summary::after { content: "+"; display: grid; place-items: center; flex: none; width: 1.8rem; height: 1.8rem; border-radius: 50%; background: var(--jade-tint); color: var(--jade-deep); font-family: var(--font-mono); }
+.fit-more[open] summary::after { content: "−"; }
+.fit-more .fit-list { padding: 0 1.25rem 1.25rem; }
+.fit-more[open] .fit-list { animation: fade-up .35s ease both; }
+
+/* Agenda de la sesión de exploración */
+.agenda { border: 1px solid var(--line); border-radius: var(--radius-lg); background: rgba(255, 255, 255, .7); }
+.agenda summary { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .9rem 1.1rem; font-family: var(--font-display); font-weight: 600; cursor: pointer; list-style: none; }
+.agenda summary::-webkit-details-marker { display: none; }
+.agenda summary::after { content: "+"; display: grid; place-items: center; flex: none; width: 1.8rem; height: 1.8rem; border-radius: 50%; background: var(--sun-tint); color: var(--gold-deep); font-family: var(--font-mono); }
+.agenda[open] summary::after { content: "−"; }
+.agenda__list { list-style: none; margin: 0; padding: 0 1.1rem 1.1rem; display: grid; gap: .75rem; }
+.agenda[open] .agenda__list { animation: fade-up .35s ease both; }
+.agenda__list li { display: grid; grid-template-columns: 5.5rem minmax(0, 1fr); gap: .75rem; font-size: var(--fs-small); }
+.agenda__time { font-family: var(--font-mono); font-size: .75rem; font-weight: 600; color: var(--gold-deep); padding-top: .15rem; }
+.agenda__list strong { display: block; color: var(--ink); }
+.agenda__list span { color: var(--ink-soft); }
+
+/* Preguntas frecuentes: filtros y búsqueda */
+.faq-tools { display: grid; gap: 1rem; max-width: 840px; margin: 0 auto 1.5rem; }
+.chip-row { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; }
+.chip-btn { padding: .5rem 1rem; border: 1px solid var(--line-strong); border-radius: 999px; background: var(--white); font: inherit; font-family: var(--font-mono); font-size: .75rem; font-weight: 600; color: var(--ink-soft); cursor: pointer; transition: background-color .2s ease, color .2s ease, border-color .2s ease, transform .2s cubic-bezier(.34, 1.56, .64, 1); }
+.chip-btn:hover { border-color: var(--jade-deep); color: var(--jade-deep); transform: translateY(-2px); }
+.chip-btn[aria-pressed="true"] { background: var(--jade-night); border-color: var(--jade-night); color: var(--ukuu-cream); }
+.faq-search__input { width: 100%; min-height: 50px; padding: .7rem 1rem .7rem 2.8rem; border: 1px solid var(--line-strong); border-radius: 999px; font: inherit; color: var(--ink); background: var(--white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2352635C' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") no-repeat 1rem center / 1.15rem; }
+.faq-search__input:focus { outline: none; border-color: var(--ukuu-sun); box-shadow: 0 0 0 4px var(--sun-tint); }
+.faq-empty { max-width: 840px; margin: 1rem auto 0; text-align: center; color: var(--ink-soft); }
+.faq__item { transition: transform .25s cubic-bezier(.34, 1.56, .64, 1), box-shadow .25s ease, border-color .25s ease; }
+@media (hover: hover) and (pointer: fine) { .faq__item:hover { transform: translateY(-2px); border-color: var(--line-strong); box-shadow: var(--shadow-sm); } }
+.faq__item[open] > .faq__answer { animation: fade-up .3s ease both; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+/* Foto de la coach y banda final */
+.coach__photo img { transition: transform .9s cubic-bezier(.16, 1, .3, 1); }
+.coach__photo::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .6s ease; background: linear-gradient(165deg, rgba(242, 154, 46, 0) 40%, rgba(242, 154, 46, .2) 70%, rgba(111, 175, 152, .3)); }
+.coach__badge { z-index: 2; }
+@media (hover: hover) and (pointer: fine) { .coach:hover .coach__photo img { transform: scale(1.045); } .coach:hover .coach__photo::after { opacity: 1; } }
+.cta-band::after { animation: sun-glow 3.6s ease-in-out infinite; }
+.wa-float:not([hidden]) { animation: pop-in .5s 1.2s cubic-bezier(.34, 1.56, .64, 1) backwards; }
+.wa-float { transition: transform .25s cubic-bezier(.34, 1.56, .64, 1), background-color .2s ease; }
+@media (hover: hover) and (pointer: fine) { .wa-float:hover { transform: translateY(-3px) scale(1.04); } }
+
+
+/* Proceso: título dentro de un botón (acordeón accesible) */
+.path__body { min-width: 0; }
+.path__heading { margin: 0; font: inherit; letter-spacing: normal; }
+.path__toggle .path__title { font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; line-height: 1.3; color: var(--ink); }
+.path__toggle .path__text { font-size: .95rem; color: var(--ink-soft); }
+.route-card .path__title { display: block; font-family: var(--font-display); font-size: 1rem; font-weight: 700; color: var(--ink); }
+.route-card .path__text { display: block; }
+.route-card .path__step a { padding: .15rem .4rem; margin: -.15rem -.4rem; }
+/* Pasos de «Cómo empezar» con elevación al pasar el puntero */
+.mini-steps--row li { transition: transform .3s cubic-bezier(.34, 1.56, .64, 1), box-shadow .3s ease, border-color .3s ease; }
+@media (hover: hover) and (pointer: fine) { .mini-steps--row li:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); border-color: var(--line-strong); } }
+.how-extra { margin-top: 1.5rem; max-width: 760px; }
+
+/* Reducir movimiento */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+  .aurora { display: none; }
+  .marquee__track { animation: none !important; flex-wrap: wrap; width: auto; justify-content: center; }
+  .marquee__group[aria-hidden="true"] { display: none; }
+  .fx .reveal:not(.is-visible) { opacity: 1; transform: none; }
+}
   </style>
 </head>
 <body class="page page--seo">
@@ -375,7 +651,7 @@ textarea.field__input { min-height: 110px; resize: vertical; }
       <a class="site-header__logo" href="https://www.coaching-ukuu.com/"><img src="data:image/png;base64,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" alt="UKUU Coaching" width="128" height="55"></a>
       <nav class="site-nav" aria-label="Secciones">
         <a class="site-nav__link" href="#proceso">El proceso</a>
-        <a class="site-nav__link" href="#para-ti">Para quién es</a>
+        <a class="site-nav__link" href="#autodiagnostico">Autodiagnóstico</a>
         <a class="site-nav__link" href="#quien-te-acompana">Quién te acompaña</a>
         <a class="site-nav__link" href="#preguntas">Preguntas</a>
       </nav>
@@ -384,15 +660,16 @@ textarea.field__input { min-height: 110px; resize: vertical; }
   </header>
 
   <main id="contenido">
-    <section class="hero" aria-labelledby="hero-title">
+    <section class="hero spotlight" aria-labelledby="hero-title">
+      <div class="aurora" aria-hidden="true"><span class="aurora__blob aurora__blob--sun"></span><span class="aurora__blob aurora__blob--jade"></span><span class="aurora__blob aurora__blob--gold"></span></div>
       <div class="container hero__grid">
         <div class="hero__content">
           <p class="pill">Coaching profesional online · Reorientación profesional</p>
           <h1 id="hero-title">Recupera la confianza para liderar tu <span class="hl">siguiente etapa profesional</span></h1>
-          <p class="hero__lead">Has construido una carrera estable, pero sientes que algo ya no encaja. Quizás es momento de revisar hacia dónde quieres avanzar. Con ALINEA PRO®, mi proceso individual de coaching profesional online, te acompaño a reconocer qué necesitas cambiar, tomar decisiones y avanzar con un plan de acción.</p>
+          <p class="hero__lead">Has construido una carrera estable, pero sientes que algo ya no encaja. Con ALINEA PRO®, mi proceso individual de coaching profesional online, te acompaño a reconocer qué necesitas cambiar, tomar decisiones y avanzar con un plan de acción.</p>
           <div class="hero__actions">
-            <a class="btn btn--primary" href="#agenda">Reserva tu sesión de exploración gratuita</a>
-            <a class="btn btn--ghost" href="#proceso">Conoce el proceso</a>
+            <a class="btn btn--primary btn--shine" href="#agenda">Reserva tu sesión de exploración gratuita</a>
+            <a class="btn btn--ghost" href="#autodiagnostico">Haz el autodiagnóstico</a>
           </div>
           <ul class="trust">
             <li>Coach certificada ICF (ACC)</li>
@@ -400,20 +677,20 @@ textarea.field__input { min-height: 110px; resize: vertical; }
             <li>100 % online y en español</li>
           </ul>
         </div>
-        <aside class="route-card" aria-labelledby="route-title">
+        <aside class="route-card tilt" data-tilt="3" aria-labelledby="route-title">
           <div class="route-card__head">
             <img class="route-card__logo" src="data:image/png;base64,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" alt="" width="112" height="48">
             <span class="tag">ALINEA PRO®</span>
           </div>
           <h2 class="route-card__title" id="route-title">Tu sendero hacia la siguiente etapa</h2>
           <ol class="path path--compact">
-            <li class="path__step"><div><h3 class="path__title">Reconocer dónde estás</h3><p class="path__text">Qué funciona y qué ya no encaja</p></div></li>
-            <li class="path__step"><div><h3 class="path__title">Reconectar con tus fortalezas y valores</h3><p class="path__text">Las capacidades que ya tienes</p></div></li>
-            <li class="path__step"><div><h3 class="path__title">Decidir tu siguiente etapa</h3><p class="path__text">Con criterios claros y propios</p></div></li>
-            <li class="path__step"><div><h3 class="path__title">Diseñar un plan de acción medible</h3><p class="path__text">Objetivos, pasos y plazos</p></div></li>
-            <li class="path__step"><div><h3 class="path__title">Avanzar con acompañamiento</h3><p class="path__text">Seguimiento en cada sesión</p></div></li>
+            <li class="path__step"><a href="#paso-1" data-step-link="paso-1"><span class="path__title">Reconocer dónde estás</span><span class="path__text">Qué funciona, qué ya no encaja y qué te frena.</span></a></li>
+            <li class="path__step"><a href="#paso-2" data-step-link="paso-2"><span class="path__title">Reconectar con tus fortalezas y valores</span><span class="path__text">Las capacidades que ya tienes y lo que te importa ahora.</span></a></li>
+            <li class="path__step"><a href="#paso-3" data-step-link="paso-3"><span class="path__title">Decidir tu siguiente etapa</span><span class="path__text">Opciones evaluadas con criterios claros y propios.</span></a></li>
+            <li class="path__step"><a href="#paso-4" data-step-link="paso-4"><span class="path__title">Diseñar un plan de acción medible</span><span class="path__text">Objetivos, pasos y plazos concretos.</span></a></li>
+            <li class="path__step"><a href="#paso-5" data-step-link="paso-5"><span class="path__title">Avanzar con acompañamiento y seguimiento</span><span class="path__text">Pones el plan en marcha y lo ajustamos sesión a sesión.</span></a></li>
           </ol>
-          <a class="btn btn--primary btn--block" href="#agenda">Reserva tu sesión de exploración</a>
+          <a class="btn btn--primary btn--block btn--shine" href="#agenda">Reserva tu sesión de exploración</a>
           <div class="route-card__coach">
             <img class="avatar" src="https://static.wixstatic.com/media/57848e_e704312b9278452986528d9863529e97~mv2.jpeg/v1/fill/w_400,h_500,q_80,enc_auto/57848e_e704312b9278452986528d9863529e97~mv2.jpeg" alt="Beatriz Terán" width="52" height="52" decoding="async" data-fallback="BT">
             <div><strong>Beatriz Terán</strong><span>Coach certificada ICF (ACC) · Ingeniera</span></div>
@@ -422,160 +699,381 @@ textarea.field__input { min-height: 110px; resize: vertical; }
       </div>
     </section>
 
-    <section class="section section--white" id="situacion" aria-labelledby="situacion-title">
+    <div class="facts" role="region" aria-label="UKUU en cifras">
       <div class="container">
-        <header class="section__header">
-          <p class="pill">Lo que vives</p>
-          <h2 id="situacion-title">¿Qué te está pasando realmente?</h2>
-          <p class="section__intro">No necesariamente estás en crisis ni quieres dejar tu trabajo mañana. Vives una tensión más silenciosa: tu vida profesional funciona, pero ya no te satisface como antes.</p>
-        </header>
-        <div class="grid grid--five">
-          <article class="card"><p class="card__label">Estancamiento</p><p class="card__quote">«Sé que puedo aportar más.»</p></article>
-          <article class="card"><p class="card__label">Desconexión</p><p class="card__quote">«Algo ya no encaja.»</p></article>
-          <article class="card"><p class="card__label">Dudas persistentes</p><p class="card__quote">«No sé qué debería cambiar.»</p></article>
-          <article class="card"><p class="card__label">Postergación</p><p class="card__quote">«Quiero avanzar, pero sigo sin decidirme.»</p></article>
-          <article class="card"><p class="card__label">Cansancio mental</p><p class="card__quote">«No puedo seguir así otros diez años.»</p></article>
+        <div class="facts__grid">
+          <div class="fact"><p class="fact__num"><span data-count="45">45</span> min</p><p class="fact__label">Sesión de exploración gratuita</p></div>
+          <div class="fact"><p class="fact__num"><span data-count="5">5</span> etapas</p><p class="fact__label">Método ALINEA PRO®</p></div>
+          <div class="fact"><p class="fact__num">+<span data-count="10">10</span> años</p><p class="fact__label">Acompañando procesos de desarrollo</p></div>
+          <div class="fact"><p class="fact__num"><span data-count="100">100</span> %</p><p class="fact__label">Online y en español</p></div>
         </div>
-        <div class="prose section__closing">
+      </div>
+    </div>
+
+    <section class="section section--white" id="situaciones" aria-labelledby="situaciones-title">
+      <div class="container">
+        <header class="section__header reveal">
+          <p class="pill">Lo que vives</p>
+          <h2 id="situaciones-title">¿Qué te está pasando realmente?</h2>
+          <p class="section__intro">Elige la frase que más se parece a lo que vives. Te cuento cómo la trabajamos.</p>
+        </header>
+        <div class="selector" data-selector>
+          <div class="selector__options" role="group" aria-label="Frases" data-stagger>
+          <button type="button" class="selector__option" data-key="estancamiento" aria-pressed="false" aria-controls="selector-panel"><span class="card__label">Estancamiento</span><span class="selector__quote">«Sé que puedo aportar más.»</span></button>
+          <button type="button" class="selector__option" data-key="desconexion" aria-pressed="false" aria-controls="selector-panel"><span class="card__label">Desconexión</span><span class="selector__quote">«Algo ya no encaja.»</span></button>
+          <button type="button" class="selector__option" data-key="dudas" aria-pressed="false" aria-controls="selector-panel"><span class="card__label">Dudas persistentes</span><span class="selector__quote">«No sé qué debería cambiar.»</span></button>
+          <button type="button" class="selector__option" data-key="postergacion" aria-pressed="false" aria-controls="selector-panel"><span class="card__label">Postergación</span><span class="selector__quote">«Quiero avanzar, pero sigo sin decidirme.»</span></button>
+          <button type="button" class="selector__option" data-key="cansancio" aria-pressed="false" aria-controls="selector-panel"><span class="card__label">Cansancio mental</span><span class="selector__quote">«No puedo seguir así otros diez años.»</span></button>
+          </div>
+          <div class="selector__panel spotlight" id="selector-panel" aria-live="polite">
+            <div class="selector__empty"><span class="selector__sun" aria-hidden="true"></span><p>Elige una frase para ver cómo la trabajamos.</p></div>
+          <article class="selector__answer" data-answer="estancamiento" hidden>
+            <p class="selector__answer-label">Estancamiento</p>
+            <h3>Tu experiencia necesita un lugar donde ponerse en juego</h3>
+            <p class="selector__answer-text">Tienes experiencia y capacidad, pero tu trabajo ya no te pide lo mejor de ti. En el proceso identificamos qué parte de tu talento está sin usar y dónde quieres ponerla en juego, para que tu siguiente paso parta de lo que ya sabes hacer.</p>
+            <ul class="tags"><li>Autoconocimiento</li><li>Fortalezas</li><li>Dirección</li></ul>
+            <button type="button" class="btn btn--primary btn--shine" data-prefill="Sé que puedo aportar más" data-source="selector">Quiero trabajar esto</button>
+            <p class="selector__hint">Lo añadimos a tu formulario de reserva.</p>
+          </article>
+          <article class="selector__answer" data-answer="desconexion" hidden>
+            <p class="selector__answer-label">Desconexión</p>
+            <h3>Tu trabajo ya no se parece a quien eres hoy</h3>
+            <p class="selector__answer-text">Tu vida profesional funciona, pero ya no encaja con tus prioridades actuales. Trabajamos tus valores y lo que ha cambiado en ti para entender qué ajuste necesitas: de rol, de empresa o de rumbo.</p>
+            <ul class="tags"><li>Valores</li><li>Coherencia</li><li>Propósito</li></ul>
+            <button type="button" class="btn btn--primary btn--shine" data-prefill="Algo ya no encaja" data-source="selector">Quiero trabajar esto</button>
+            <p class="selector__hint">Lo añadimos a tu formulario de reserva.</p>
+          </article>
+          <article class="selector__answer" data-answer="dudas" hidden>
+            <p class="selector__answer-label">Dudas persistentes</p>
+            <h3>No necesitas llegar con la respuesta</h3>
+            <p class="selector__answer-text">Ordenamos tu situación, separamos lo que tiene que ver con el puesto, con la empresa y con la profesión, y construimos opciones concretas para que elijas con criterio propio.</p>
+            <ul class="tags"><li>Opciones</li><li>Criterio propio</li><li>Decisión</li></ul>
+            <button type="button" class="btn btn--primary btn--shine" data-prefill="No sé qué debería cambiar" data-source="selector">Quiero trabajar esto</button>
+            <p class="selector__hint">Lo añadimos a tu formulario de reserva.</p>
+          </article>
+          <article class="selector__answer" data-answer="postergacion" hidden>
+            <p class="selector__answer-label">Postergación</p>
+            <h3>Decidir también puede tener fechas</h3>
+            <p class="selector__answer-text">Llevas tiempo dándole vueltas. Convertimos la decisión en pasos pequeños y medibles, con fechas y seguimiento en cada sesión, para que avanzar deje de depender del momento perfecto.</p>
+            <ul class="tags"><li>Decisión</li><li>Plan de acción</li><li>Seguimiento</li></ul>
+            <button type="button" class="btn btn--primary btn--shine" data-prefill="Quiero avanzar, pero sigo sin decidirme" data-source="selector">Quiero trabajar esto</button>
+            <p class="selector__hint">Lo añadimos a tu formulario de reserva.</p>
+          </article>
+          <article class="selector__answer" data-answer="cansancio" hidden>
+            <p class="selector__answer-label">Cansancio mental</p>
+            <h3>Una transición realista, a tu ritmo</h3>
+            <p class="selector__answer-text">Sostener una situación que no encaja desgasta. Sin prisas ni saltos al vacío, revisamos qué necesitas cambiar y diseñamos una transición posible, sin dejar tu trabajo de un día para otro.</p>
+            <ul class="tags"><li>Transición</li><li>Confianza</li><li>Ritmo propio</li></ul>
+            <button type="button" class="btn btn--primary btn--shine" data-prefill="No puedo seguir así otros diez años" data-source="selector">Quiero trabajar esto</button>
+            <p class="selector__hint">Lo añadimos a tu formulario de reserva.</p>
+          </article>
+          </div>
+        </div>
+        <div class="prose section__closing reveal">
           <p>Debajo de estas experiencias suele haber una necesidad central: recuperar la confianza en tu criterio y en tu capacidad para conducir tu siguiente etapa.</p>
-          <p>No necesitas que alguien te diga cómo vivir. Necesitas un espacio de trabajo personal, acompañamiento y estructura para reconocer qué quieres, tomar decisiones y convertirlas en acciones.</p>
+          <button type="button" class="more-btn" data-more="situacion" aria-expanded="false" aria-controls="situacion-mas" data-labels="Leer más|Leer menos"><span class="more-btn__text">Leer más</span></button>
+          <div class="more-panel" id="situacion-mas" hidden>
+            <p>No necesariamente estás en crisis ni quieres dejar tu trabajo mañana. Vives una tensión más silenciosa: tu vida profesional funciona, pero ya no te satisface como antes.</p>
+            <p>No necesitas que alguien te diga cómo vivir. Necesitas un espacio de trabajo personal, acompañamiento y estructura para reconocer qué quieres, tomar decisiones y convertirlas en acciones.</p>
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="section section--night" id="resultados" aria-labelledby="resultados-title">
+    <section class="section section--night spotlight" id="resultados" aria-labelledby="resultados-title">
       <div class="container">
-        <header class="section__header">
+        <header class="section__header reveal">
           <p class="pill pill--night">Lo que vas a conseguir</p>
           <h2 id="resultados-title">Volver a dirigir tu vida profesional con confianza</h2>
-          <p class="section__intro">Tu objetivo no es simplemente cambiar de empleo. Estos son los cinco resultados en los que trabajamos.</p>
+          <p class="section__intro">Tu objetivo no es simplemente cambiar de empleo. Estos son los cinco resultados en los que trabajamos; abre cada uno para ver cómo.</p>
         </header>
-        <div class="grid grid--five">
-          <article class="card card--night"><span class="card__mark" aria-hidden="true"></span><h3 class="card__title">Confianza</h3><p>Volver a confiar en tu criterio y en tus capacidades.</p></article>
-          <article class="card card--night"><span class="card__mark" aria-hidden="true"></span><h3 class="card__title">Dirección</h3><p>Reconocer qué quieres para tu siguiente etapa profesional.</p></article>
-          <article class="card card--night"><span class="card__mark" aria-hidden="true"></span><h3 class="card__title">Decisión</h3><p>Dejar de aplazar las decisiones importantes.</p></article>
-          <article class="card card--night"><span class="card__mark" aria-hidden="true"></span><h3 class="card__title">Acción</h3><p>Convertir tus reflexiones en pasos concretos y medibles.</p></article>
-          <article class="card card--night"><span class="card__mark" aria-hidden="true"></span><h3 class="card__title">Coherencia</h3><p>Alinear tus decisiones con tus valores, fortalezas y prioridades.</p></article>
+        <div class="grid grid--five" data-stagger>
+          <article class="card card--night tilt">
+            <span class="card__mark" aria-hidden="true"></span>
+            <h3 class="card__title">Confianza</h3>
+            <p>Volver a confiar en tu criterio y en tus capacidades.</p>
+            <button type="button" class="more-btn" data-more="resultado-confianza" aria-expanded="false" aria-controls="res-confianza" data-labels="Cómo lo trabajamos|Ocultar"><span class="more-btn__text">Cómo lo trabajamos</span></button>
+            <div class="more-panel" id="res-confianza" hidden><p>Revisamos tus logros y las decisiones que ya tomaste bien para recuperar la evidencia de lo que sabes hacer. La confianza se construye actuando: cada sesión termina con un paso concreto que refuerza tu criterio.</p></div>
+          </article>
+          <article class="card card--night tilt">
+            <span class="card__mark" aria-hidden="true"></span>
+            <h3 class="card__title">Dirección</h3>
+            <p>Reconocer qué quieres para tu siguiente etapa profesional.</p>
+            <button type="button" class="more-btn" data-more="resultado-direccion" aria-expanded="false" aria-controls="res-direccion" data-labels="Cómo lo trabajamos|Ocultar"><span class="more-btn__text">Cómo lo trabajamos</span></button>
+            <div class="more-panel" id="res-direccion" hidden><p>Definimos qué quieres conservar, qué quieres cambiar y qué ya no quieres negociar. El resultado es una dirección escrita, con criterios para evaluar cualquier opción.</p></div>
+          </article>
+          <article class="card card--night tilt">
+            <span class="card__mark" aria-hidden="true"></span>
+            <h3 class="card__title">Decisión</h3>
+            <p>Dejar de aplazar las decisiones importantes.</p>
+            <button type="button" class="more-btn" data-more="resultado-decision" aria-expanded="false" aria-controls="res-decision" data-labels="Cómo lo trabajamos|Ocultar"><span class="more-btn__text">Cómo lo trabajamos</span></button>
+            <div class="more-panel" id="res-decision" hidden><p>Ponemos sobre la mesa tus opciones reales, sus riesgos y lo que necesitas saber para elegir. Decidir deja de ser una idea abstracta y se convierte en un proceso con fechas.</p></div>
+          </article>
+          <article class="card card--night tilt">
+            <span class="card__mark" aria-hidden="true"></span>
+            <h3 class="card__title">Acción</h3>
+            <p>Convertir tus reflexiones en pasos concretos y medibles.</p>
+            <button type="button" class="more-btn" data-more="resultado-accion" aria-expanded="false" aria-controls="res-accion" data-labels="Cómo lo trabajamos|Ocultar"><span class="more-btn__text">Cómo lo trabajamos</span></button>
+            <div class="more-panel" id="res-accion" hidden><p>Tu plan de acción escrito traduce la decisión en objetivos, pasos y plazos, con indicadores para saber si avanzas. Lo revisamos y ajustamos en cada sesión.</p></div>
+          </article>
+          <article class="card card--night tilt">
+            <span class="card__mark" aria-hidden="true"></span>
+            <h3 class="card__title">Coherencia</h3>
+            <p>Alinear tus decisiones con tus valores, fortalezas y prioridades.</p>
+            <button type="button" class="more-btn" data-more="resultado-coherencia" aria-expanded="false" aria-controls="res-coherencia" data-labels="Cómo lo trabajamos|Ocultar"><span class="more-btn__text">Cómo lo trabajamos</span></button>
+            <div class="more-panel" id="res-coherencia" hidden><p>Trabajamos con herramientas propias de autoconocimiento para que tu siguiente etapa encaje con quien eres hoy, no con quien eras hace diez años.</p></div>
+          </article>
         </div>
       </div>
     </section>
 
-    <section class="section" id="temas" aria-label="Cómo te acompaño según tu momento">
-      <div class="container topics">
-        <article class="topic" id="reorientacion-profesional">
-          <div class="topic__head">
-            <p class="pill">Reorientación y transición</p>
-            <h2>Reorientación profesional: decide hacia dónde quieres avanzar</h2>
+    <section class="section" id="temas" aria-labelledby="temas-title">
+      <div class="container">
+        <header class="section__header reveal">
+          <p class="pill">Según tu momento</p>
+          <h2 id="temas-title">Cómo te acompaño según lo que estás viviendo</h2>
+          <p class="section__intro">Elige el tema que más se acerca a tu situación.</p>
+        </header>
+        <div class="tabs tabs--light reveal" data-tabs>
+          <div class="tabs__list" role="tablist" aria-label="Temas">
+            <button class="tabs__tab" type="button" role="tab" id="tt-reorientacion-profesional" aria-controls="reorientacion-profesional" aria-selected="true">Reorientación</button>
+            <button class="tabs__tab" type="button" role="tab" id="tt-cambiar-de-trabajo-a-los-40-o-50" aria-controls="cambiar-de-trabajo-a-los-40-o-50" aria-selected="false" tabindex="-1">A los 40 o 50</button>
+            <button class="tabs__tab" type="button" role="tab" id="tt-estancamiento-profesional" aria-controls="estancamiento-profesional" aria-selected="false" tabindex="-1">Estancamiento</button>
+            <button class="tabs__tab" type="button" role="tab" id="tt-liderazgo-personal" aria-controls="liderazgo-personal" aria-selected="false" tabindex="-1">Liderazgo personal</button>
+            <button class="tabs__tab" type="button" role="tab" id="tt-proposito-profesional" aria-controls="proposito-profesional" aria-selected="false" tabindex="-1">Propósito</button>
           </div>
-          <div class="topic__body">
-            <p>La reorientación profesional no siempre implica un cambio radical. A veces significa cambiar de sector; otras, replantear tu rol o dar un giro profesional hacia algo más coherente con quien eres hoy. Puede ser una transición laboral dentro de tu sector o un cambio de carrera profesional completo. Lo importante es que la decisión sea tuya y esté bien fundamentada.</p>
-            <p>En una transición profesional te acompaño a:</p>
-            <ul>
-              <li>Ordenar tus opciones de cambio de rumbo profesional con criterios claros.</li>
-              <li>Reconocer qué capacidades puedes llevar a tu siguiente etapa.</li>
-              <li>Planear el cambio de carrera por pasos, con plazos y objetivos medibles.</li>
-            </ul>
-          </div>
-        </article>
-
-        <article class="topic" id="cambiar-de-trabajo-a-los-40-o-50">
-          <div class="topic__head">
-            <p class="pill">A los 40, a los 50</p>
-            <h2>¿Cambiar de trabajo a los 40 o a los 50? No necesitas empezar de cero</h2>
-          </div>
-          <div class="topic__body">
-            <p>Muchas personas se plantean cambiar de trabajo a los 40, cambiar de profesión a los 45 o reorientar su carrera a los 50. Es una etapa en la que pesan más las responsabilidades, pero también cuentas con algo valioso: años de experiencia, criterio y capacidades demostradas.</p>
-            <p>No necesitas empezar de cero. Puedes volver a poner en acción capacidades que ya tienes y construir desde ellas tu siguiente etapa. En el proceso identificamos qué es transferible, qué quieres dejar atrás y cuál es el siguiente paso realista para ti.</p>
-            <p>Es una orientación profesional para personas adultas con trayectoria, centrada en decisiones y en acción.</p>
-          </div>
-        </article>
-
-        <article class="topic" id="estancamiento-profesional">
-          <div class="topic__head">
-            <p class="pill">Estancamiento</p>
-            <h2>Estancamiento profesional: cuando sabes que puedes aportar más</h2>
-          </div>
-          <div class="topic__body">
-            <p>El estancamiento laboral no siempre se nota desde fuera. Cumples, tienes experiencia y tu trabajo funciona, pero sientes que ya no avanzas. A menudo aparece con frases como estas:</p>
-            <h3 class="topic__voice">«Mi trabajo ya no me motiva»</h3>
-            <p>La motivación va y viene; lo que conviene revisar es si lo que haces sigue conectado con lo que valoras y con lo que quieres aportar.</p>
-            <h3 class="topic__voice">«Mi trabajo ya no me satisface»</h3>
-            <p>Puede que el problema esté en el puesto, en la empresa o en la profesión. Distinguirlo cambia por completo la decisión.</p>
-            <h3 class="topic__voice">«No sé hacia dónde orientar mi carrera»</h3>
-            <p>No necesitas tener la respuesta antes de empezar. La construimos con autoconocimiento, criterios claros y un plan.</p>
-          </div>
-        </article>
-
-        <article class="topic" id="liderazgo-personal">
-          <div class="topic__head">
-            <p class="pill">Liderazgo personal y fortalezas</p>
-            <h2>Liderazgo personal y fortalezas: dirige tu carrera con criterio propio</h2>
-          </div>
-          <div class="topic__body">
-            <p>El liderazgo personal es la capacidad de conducir tu propia trayectoria: decidir con criterio, actuar con coherencia y sostener tus decisiones. No depende de tener un cargo de dirección; se entrena con autoconocimiento y práctica.</p>
-            <p>En ALINEA PRO® trabajamos tu desarrollo profesional y personal a partir de tus fortalezas: identificamos lo que haces bien, lo que te da energía y cómo usarlo de forma deliberada en tu siguiente etapa. Es un enfoque de coaching de fortalezas aplicado a decisiones reales.</p>
-          </div>
-        </article>
-
-        <article class="topic" id="proposito-profesional">
-          <div class="topic__head">
-            <p class="pill">Propósito y valores</p>
-            <h2>Propósito profesional y valores: alinea tu trabajo con quien eres hoy</h2>
-          </div>
-          <div class="topic__body">
-            <p>Tener un propósito profesional no significa encontrar una vocación perfecta. Significa tener claro qué valoras, qué quieres aportar y qué tipo de trabajo es coherente con tu momento vital.</p>
-            <p>Con herramientas de autoconocimiento profesional definimos tu rumbo profesional y lo traducimos en un plan de carrera personal: objetivos, prioridades y próximos pasos. Así tus decisiones se apoyan en tus valores y no en la urgencia del momento.</p>
-          </div>
-        </article>
+          <article class="tabs__panel topic-panel" role="tabpanel" id="reorientacion-profesional" aria-labelledby="tt-reorientacion-profesional" tabindex="0">
+            <div class="topic-panel__head">
+              <p class="pill">Reorientación y transición</p>
+              <h3>Reorientación profesional: decide hacia dónde quieres avanzar</h3>
+              <a class="btn btn--ghost" href="#agenda">Hablemos de tu caso</a>
+            </div>
+            <div class="topic-panel__body">
+                <p>La reorientación profesional no siempre implica un cambio radical. A veces significa cambiar de sector; otras, replantear tu rol o dar un giro profesional hacia algo más coherente con quien eres hoy. Puede ser una transición laboral dentro de tu sector o un cambio de carrera profesional completo. Lo importante es que la decisión sea tuya y esté bien fundamentada.</p>
+                <p>En una transición profesional te acompaño a:</p>
+                <ul>
+                  <li>Ordenar tus opciones de cambio de rumbo profesional con criterios claros.</li>
+                  <li>Reconocer qué capacidades puedes llevar a tu siguiente etapa.</li>
+                  <li>Planear el cambio de carrera por pasos, con plazos y objetivos medibles.</li>
+                </ul>
+            </div>
+          </article>
+          <article class="tabs__panel topic-panel" role="tabpanel" id="cambiar-de-trabajo-a-los-40-o-50" aria-labelledby="tt-cambiar-de-trabajo-a-los-40-o-50" tabindex="0" hidden>
+            <div class="topic-panel__head">
+              <p class="pill">A los 40, a los 50</p>
+              <h3>¿Cambiar de trabajo a los 40 o a los 50? No necesitas empezar de cero</h3>
+              <a class="btn btn--ghost" href="#agenda">Hablemos de tu caso</a>
+            </div>
+            <div class="topic-panel__body">
+                <p>Muchas personas se plantean cambiar de trabajo a los 40, cambiar de profesión a los 45 o reorientar su carrera a los 50. Es una etapa en la que pesan más las responsabilidades, pero también cuentas con algo valioso: años de experiencia, criterio y capacidades demostradas.</p>
+                <p>No necesitas empezar de cero. Puedes volver a poner en acción capacidades que ya tienes y construir desde ellas tu siguiente etapa. En el proceso identificamos qué es transferible, qué quieres dejar atrás y cuál es el siguiente paso realista para ti.</p>
+                <p>Es una orientación profesional para personas adultas con trayectoria, centrada en decisiones y en acción.</p>
+            </div>
+          </article>
+          <article class="tabs__panel topic-panel" role="tabpanel" id="estancamiento-profesional" aria-labelledby="tt-estancamiento-profesional" tabindex="0" hidden>
+            <div class="topic-panel__head">
+              <p class="pill">Estancamiento</p>
+              <h3>Estancamiento profesional: cuando sabes que puedes aportar más</h3>
+              <a class="btn btn--ghost" href="#agenda">Hablemos de tu caso</a>
+            </div>
+            <div class="topic-panel__body">
+                <p>El estancamiento laboral no siempre se nota desde fuera. Cumples, tienes experiencia y tu trabajo funciona, pero sientes que ya no avanzas. A menudo aparece con frases como estas:</p>
+                <h4>«Mi trabajo ya no me motiva»</h4>
+                <p>La motivación va y viene; lo que conviene revisar es si lo que haces sigue conectado con lo que valoras y con lo que quieres aportar.</p>
+                <h4>«Mi trabajo ya no me satisface»</h4>
+                <p>Puede que el problema esté en el puesto, en la empresa o en la profesión. Distinguirlo cambia por completo la decisión.</p>
+                <h4>«No sé hacia dónde orientar mi carrera»</h4>
+                <p>No necesitas tener la respuesta antes de empezar. La construimos con autoconocimiento, criterios claros y un plan.</p>
+            </div>
+          </article>
+          <article class="tabs__panel topic-panel" role="tabpanel" id="liderazgo-personal" aria-labelledby="tt-liderazgo-personal" tabindex="0" hidden>
+            <div class="topic-panel__head">
+              <p class="pill">Liderazgo personal y fortalezas</p>
+              <h3>Liderazgo personal y fortalezas: dirige tu carrera con criterio propio</h3>
+              <a class="btn btn--ghost" href="#agenda">Hablemos de tu caso</a>
+            </div>
+            <div class="topic-panel__body">
+                <p>El liderazgo personal es la capacidad de conducir tu propia trayectoria: decidir con criterio, actuar con coherencia y sostener tus decisiones. No depende de tener un cargo de dirección; se entrena con autoconocimiento y práctica.</p>
+                <p>En ALINEA PRO® trabajamos tu desarrollo profesional y personal a partir de tus fortalezas: identificamos lo que haces bien, lo que te da energía y cómo usarlo de forma deliberada en tu siguiente etapa. Es un enfoque de coaching de fortalezas aplicado a decisiones reales.</p>
+            </div>
+          </article>
+          <article class="tabs__panel topic-panel" role="tabpanel" id="proposito-profesional" aria-labelledby="tt-proposito-profesional" tabindex="0" hidden>
+            <div class="topic-panel__head">
+              <p class="pill">Propósito y valores</p>
+              <h3>Propósito profesional y valores: alinea tu trabajo con quien eres hoy</h3>
+              <a class="btn btn--ghost" href="#agenda">Hablemos de tu caso</a>
+            </div>
+            <div class="topic-panel__body">
+                <p>Tener un propósito profesional no significa encontrar una vocación perfecta. Significa tener claro qué valoras, qué quieres aportar y qué tipo de trabajo es coherente con tu momento vital.</p>
+                <p>Con herramientas de autoconocimiento profesional definimos tu rumbo profesional y lo traducimos en un plan de carrera personal: objetivos, prioridades y próximos pasos. Así tus decisiones se apoyan en tus valores y no en la urgencia del momento.</p>
+            </div>
+          </article>
+        </div>
       </div>
     </section>
 
     <section class="section section--white" id="proceso" aria-labelledby="proceso-title">
       <div class="container">
-        <header class="section__header">
+        <header class="section__header reveal">
           <p class="pill">El método</p>
           <h2 id="proceso-title">ALINEA PRO®: el proceso paso a paso</h2>
-          <p class="section__intro">Un proceso individual de coaching que integra autoconocimiento, liderazgo personal, fortalezas, estructura y acción medible para ayudarte a tomar decisiones y avanzar de manera coherente con quien eres hoy.</p>
+          <p class="section__intro">Un proceso individual de coaching que integra autoconocimiento, liderazgo personal, fortalezas, estructura y acción medible. Toca cada etapa para ver qué hacemos y qué te llevas.</p>
         </header>
         <div class="split">
-          <ol class="path">
-            <li class="path__step"><div><h3 class="path__title">Reconocer dónde estás</h3><p class="path__text">Ordenamos tu situación actual: qué funciona, qué ya no encaja y qué te está frenando. Es el punto de partida para decidir con información.</p></div></li>
-            <li class="path__step"><div><h3 class="path__title">Reconectar con tus fortalezas y valores</h3><p class="path__text">Identificamos las capacidades que ya tienes, tus fortalezas y lo que de verdad te importa en esta etapa, con herramientas propias de autoconocimiento.</p></div></li>
-            <li class="path__step"><div><h3 class="path__title">Decidir tu siguiente etapa</h3><p class="path__text">Evaluamos tus opciones con criterios claros: qué quieres conservar, qué quieres cambiar y qué riesgos aceptas asumir. La decisión es tuya; el proceso te da la estructura para tomarla.</p></div></li>
-            <li class="path__step"><div><h3 class="path__title">Diseñar un plan de acción medible</h3><p class="path__text">Convertimos la decisión en objetivos, pasos y plazos concretos, con indicadores para saber si avanzas.</p></div></li>
-            <li class="path__step"><div><h3 class="path__title">Avanzar con acompañamiento y seguimiento</h3><p class="path__text">Pones el plan en marcha y lo ajustamos en cada sesión según tus avances. Al terminar, te llevas un método que puedes seguir por tu cuenta.</p></div></li>
+          <ol class="path path--interactive reveal" data-path>
+            <li class="path__step is-open" id="paso-1">
+              <div class="path__body">
+                <h3 class="path__heading"><button type="button" class="path__toggle" aria-expanded="true" aria-controls="paso-1-detalle"><span class="path__title">Reconocer dónde estás</span><span class="path__text">Qué funciona, qué ya no encaja y qué te frena.</span></button></h3>
+                <div class="path__detail" id="paso-1-detalle">
+                  <p><strong>Qué hacemos:</strong> Un diagnóstico de tu momento profesional y de lo que te ha traído hasta aquí.</p>
+                  <p><strong>Qué te llevas:</strong> Una imagen clara de tu punto de partida.</p>
+                </div>
+              </div>
+            </li>
+            <li class="path__step" id="paso-2">
+              <div class="path__body">
+                <h3 class="path__heading"><button type="button" class="path__toggle" aria-expanded="false" aria-controls="paso-2-detalle"><span class="path__title">Reconectar con tus fortalezas y valores</span><span class="path__text">Las capacidades que ya tienes y lo que te importa ahora.</span></button></h3>
+                <div class="path__detail" id="paso-2-detalle" hidden>
+                  <p><strong>Qué hacemos:</strong> Trabajamos con herramientas propias de autoconocimiento y con el análisis de tu trayectoria.</p>
+                  <p><strong>Qué te llevas:</strong> Tus fortalezas y valores, ordenados y por escrito.</p>
+                </div>
+              </div>
+            </li>
+            <li class="path__step" id="paso-3">
+              <div class="path__body">
+                <h3 class="path__heading"><button type="button" class="path__toggle" aria-expanded="false" aria-controls="paso-3-detalle"><span class="path__title">Decidir tu siguiente etapa</span><span class="path__text">Opciones evaluadas con criterios claros y propios.</span></button></h3>
+                <div class="path__detail" id="paso-3-detalle" hidden>
+                  <p><strong>Qué hacemos:</strong> Comparamos opciones: qué quieres conservar, qué quieres cambiar y qué riesgos aceptas asumir.</p>
+                  <p><strong>Qué te llevas:</strong> Una decisión tomada con criterio propio.</p>
+                </div>
+              </div>
+            </li>
+            <li class="path__step" id="paso-4">
+              <div class="path__body">
+                <h3 class="path__heading"><button type="button" class="path__toggle" aria-expanded="false" aria-controls="paso-4-detalle"><span class="path__title">Diseñar un plan de acción medible</span><span class="path__text">Objetivos, pasos y plazos concretos.</span></button></h3>
+                <div class="path__detail" id="paso-4-detalle" hidden>
+                  <p><strong>Qué hacemos:</strong> Definimos objetivos, pasos y plazos, con indicadores para saber si avanzas.</p>
+                  <p><strong>Qué te llevas:</strong> Tu plan de acción escrito.</p>
+                </div>
+              </div>
+            </li>
+            <li class="path__step" id="paso-5">
+              <div class="path__body">
+                <h3 class="path__heading"><button type="button" class="path__toggle" aria-expanded="false" aria-controls="paso-5-detalle"><span class="path__title">Avanzar con acompañamiento y seguimiento</span><span class="path__text">Pones el plan en marcha y lo ajustamos sesión a sesión.</span></button></h3>
+                <div class="path__detail" id="paso-5-detalle" hidden>
+                  <p><strong>Qué hacemos:</strong> Revisamos tus avances en cada sesión y ajustamos el plan cuando hace falta.</p>
+                  <p><strong>Qué te llevas:</strong> Un método que puedes seguir por tu cuenta cuando el proceso termina.</p>
+                </div>
+              </div>
+            </li>
           </ol>
-          <aside class="practice" aria-labelledby="practica-title">
+          <aside class="practice spotlight reveal" aria-labelledby="practica-title">
             <p class="practice__eyebrow">En la práctica</p>
             <h3 class="practice__title" id="practica-title">Un proceso a tu medida, <em>con estructura</em></h3>
-            <!-- PENDIENTE: cuando esté definido, detallar aquí el número de sesiones -->
-            <ul class="star-list">
-              <li>Sesiones individuales de 45 minutos por Google Meet</li>
-              <li>Frecuencia flexible, según tu agenda</li>
-              <li>Duración y número de sesiones definidos contigo según tu objetivo</li>
-              <li>Ejercicios entre sesiones y cuaderno de trabajo</li>
-              <li>Herramientas propias de autoconocimiento y fortalezas</li>
-              <li>Plan de acción escrito</li>
-              <li>En español, desde cualquier país</li>
-            </ul>
-            <a class="btn btn--primary btn--block" href="#agenda">Reserva tu sesión de exploración</a>
+            <div class="tabs" data-tabs>
+              <div class="tabs__list" role="tablist" aria-label="Detalles del proceso">
+              <button class="tabs__tab" type="button" role="tab" id="tab-formato" aria-controls="panel-formato" aria-selected="true">Formato</button>
+              <button class="tabs__tab" type="button" role="tab" id="tab-incluye" aria-controls="panel-incluye" aria-selected="false" tabindex="-1">Incluye</button>
+              <button class="tabs__tab" type="button" role="tab" id="tab-inversion" aria-controls="panel-inversion" aria-selected="false" tabindex="-1">Inversión</button>
+              <button class="tabs__tab" type="button" role="tab" id="tab-donde" aria-controls="panel-donde" aria-selected="false" tabindex="-1">Dónde</button>
+              </div>
+            <div class="tabs__panel" role="tabpanel" id="panel-formato" aria-labelledby="tab-formato" tabindex="0">
+                <p>Sesiones individuales de 45 minutos por Google Meet. La frecuencia es flexible y la acordamos según tu agenda.</p>
+                <p>La duración y el número de sesiones se definen contigo según tu objetivo.</p>
+                <!-- PENDIENTE: detallar aquí el número de sesiones cuando esté definido -->
+            </div>
+            <div class="tabs__panel" role="tabpanel" id="panel-incluye" aria-labelledby="tab-incluye" tabindex="0" hidden>
+                <ul class="star-list"><li>Ejercicios entre sesiones</li><li>Cuaderno de trabajo</li><li>Herramientas propias de autoconocimiento y fortalezas</li><li>Plan de acción escrito</li></ul>
+            </div>
+            <div class="tabs__panel" role="tabpanel" id="panel-inversion" aria-labelledby="tab-inversion" tabindex="0" hidden>
+                <p>Depende del formato y de la duración que necesites. Te la explico con transparencia en la sesión de exploración, que es gratuita y sin compromiso.</p>
+            </div>
+            <div class="tabs__panel" role="tabpanel" id="panel-donde" aria-labelledby="tab-donde" tabindex="0" hidden>
+                <p>100 % online y en español, desde España, Latinoamérica, Estados Unidos o cualquier otro país. El calendario te muestra los horarios en tu zona horaria.</p>
+            </div>
+            </div>
+            <a class="btn btn--primary btn--block btn--shine" href="#agenda">Reserva tu sesión de exploración</a>
           </aside>
         </div>
-        <div class="prose section__closing">
-          <h3>Por qué un proceso acompañado</h3>
-          <p>Si ya intentaste resolverlo por tu cuenta, sabes que pensarlo una y otra vez no basta. Lo que marca la diferencia es la combinación de acompañamiento humano y un método estructurado que transforma la reflexión en decisiones y acciones concretas.</p>
+        <div class="prose section__closing reveal">
+          <button type="button" class="more-btn" data-more="por-que" aria-expanded="false" aria-controls="por-que-mas" data-labels="¿Por qué un proceso acompañado?|Ocultar"><span class="more-btn__text">¿Por qué un proceso acompañado?</span></button>
+          <div class="more-panel" id="por-que-mas" hidden>
+            <p>Si ya intentaste resolverlo por tu cuenta, sabes que pensarlo una y otra vez no basta. Lo que marca la diferencia es la combinación de acompañamiento humano y un método estructurado que transforma la reflexión en decisiones y acciones concretas.</p>
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="section section--tint" id="para-ti" aria-labelledby="para-ti-title">
+    <div class="marquee">
+      <div class="marquee__track">
+        <div class="marquee__group"><span class="marquee__item">Reorientación profesional</span><span class="marquee__item">Transición de carrera</span><span class="marquee__item">Cambiar de trabajo a los 40 o a los 50</span><span class="marquee__item">Liderazgo personal</span><span class="marquee__item">Propósito profesional</span><span class="marquee__item">Fortalezas</span><span class="marquee__item">Toma de decisiones</span><span class="marquee__item">Plan de acción</span><span class="marquee__item">Autoconocimiento</span></div>
+        <div class="marquee__group" aria-hidden="true"><span class="marquee__item">Reorientación profesional</span><span class="marquee__item">Transición de carrera</span><span class="marquee__item">Cambiar de trabajo a los 40 o a los 50</span><span class="marquee__item">Liderazgo personal</span><span class="marquee__item">Propósito profesional</span><span class="marquee__item">Fortalezas</span><span class="marquee__item">Toma de decisiones</span><span class="marquee__item">Plan de acción</span><span class="marquee__item">Autoconocimiento</span></div>
+      </div>
+    </div>
+
+    <section class="section section--tint" id="autodiagnostico" aria-labelledby="quiz-title">
       <div class="container">
-        <header class="section__header">
+        <div class="quiz glow-border reveal" data-quiz>
+          <div class="quiz__intro">
+            <p class="pill">Autodiagnóstico · 30 segundos</p>
+            <h2 id="quiz-title">¿Por dónde empezaríamos contigo?</h2>
+            <p class="section__intro">Tres preguntas rápidas. Al final te digo cuál sería tu punto de partida en ALINEA PRO®.</p>
+          </div>
+          <div class="quiz__body">
+            <div class="quiz__meta">
+              <div class="quiz__progress" aria-hidden="true"><span></span></div>
+              <p class="quiz__count" aria-live="polite">Pregunta 1 de 3</p>
+            </div>
+            <fieldset class="quiz__step">
+              <legend>¿Cómo describirías tu trabajo hoy?</legend>
+              <div class="quiz__options">
+                <button type="button" class="quiz__option" data-score="estancamiento:2">Funciona, pero siento que puedo aportar más</button>
+                <button type="button" class="quiz__option" data-score="desconexion:2">Ya no encaja con quien soy hoy</button>
+                <button type="button" class="quiz__option" data-score="cansancio:2">Me agota y no me veo así muchos años más</button>
+              </div>
+            </fieldset>
+            <fieldset class="quiz__step" hidden>
+              <legend>¿Qué tienes claro sobre tu siguiente paso?</legend>
+              <div class="quiz__options">
+                <button type="button" class="quiz__option" data-score="dudas:2">Todavía no sé qué debería cambiar</button>
+                <button type="button" class="quiz__option" data-score="postergacion:2">Tengo una idea, pero no termino de decidirme</button>
+                <button type="button" class="quiz__option" data-score="postergacion:1,estancamiento:1">Sé lo que quiero; me falta un plan</button>
+              </div>
+              <button type="button" class="quiz__back">← Atrás</button>
+            </fieldset>
+            <fieldset class="quiz__step" hidden>
+              <legend>¿Qué te frena más?</legend>
+              <div class="quiz__options">
+                <button type="button" class="quiz__option" data-score="dudas:1,desconexion:1">No confiar del todo en mi criterio</button>
+                <button type="button" class="quiz__option" data-score="dudas:1,postergacion:1">No saber por dónde empezar</button>
+                <button type="button" class="quiz__option" data-score="postergacion:1,cansancio:1">El miedo a equivocarme</button>
+              </div>
+              <button type="button" class="quiz__back">← Atrás</button>
+            </fieldset>
+            <div class="quiz__result" hidden>
+              <p class="quiz__result-label">Tu punto de partida</p>
+              <h3 class="quiz__result-title"></h3>
+              <p class="quiz__result-quote"></p>
+              <p class="quiz__result-text"></p>
+              <ul class="tags tags--light quiz__result-tags"></ul>
+              <div class="quiz__actions">
+                <button type="button" class="btn btn--primary btn--shine" data-prefill="" data-source="autodiagnostico">Reservar con este punto de partida</button>
+                <button type="button" class="btn btn--ghost" data-quiz-restart>Volver a empezar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--white" id="para-ti" aria-labelledby="para-ti-title">
+      <div class="container">
+        <header class="section__header reveal">
           <p class="pill">Para quién es</p>
           <h2 id="para-ti-title">¿Es ALINEA PRO® para ti?</h2>
         </header>
-        <div class="grid grid--2">
-          <div class="fit">
+        <div class="split">
+          <div class="fit reveal">
             <h3>Es para ti si…</h3>
             <ul class="fit-list fit-list--yes">
               <li>Tienes experiencia profesional y sientes que tu situación actual ya no encaja contigo.</li>
@@ -583,23 +1081,24 @@ textarea.field__input { min-height: 110px; resize: vertical; }
               <li>Buscas un proceso estructurado, con objetivos y avances medibles.</li>
               <li>Tienes disposición para trabajar en ti y comprometerte con el proceso.</li>
             </ul>
+            <a class="btn btn--primary btn--shine" href="#agenda">Reserva tu sesión de exploración</a>
           </div>
-          <div class="fit fit--no">
-            <h3>No es para ti si…</h3>
+          <details class="fit-more reveal">
+            <summary>¿Y para quién no es?</summary>
             <ul class="fit-list fit-list--no">
               <li>Buscas que alguien decida por ti qué camino tomar.</li>
               <li>Esperas resultados inmediatos sin trabajo personal.</li>
               <li>Buscas un servicio de búsqueda de empleo o de redacción de CV.</li>
               <li>Necesitas atención psicológica: en ese caso, te recomendaré acudir a un profesional de la salud mental.</li>
             </ul>
-          </div>
+          </details>
         </div>
       </div>
     </section>
 
     <section class="section" id="quien-te-acompana" aria-labelledby="quien-title">
       <div class="container">
-        <div class="coach">
+        <div class="coach reveal">
           <div class="coach__photo">
             <!-- Foto alojada en el sitio actual de UKUU (Wix). Si cambias de plataforma, súbela a tu biblioteca de medios y actualiza esta URL. -->
             <img src="https://static.wixstatic.com/media/57848e_e704312b9278452986528d9863529e97~mv2.jpeg/v1/fill/w_640,h_800,q_82,enc_auto/57848e_e704312b9278452986528d9863529e97~mv2.jpeg" alt="Beatriz Terán, coach profesional certificada ICF" width="640" height="800" decoding="async" data-fallback="BT">
@@ -610,13 +1109,22 @@ textarea.field__input { min-height: 110px; resize: vertical; }
             <h2 id="quien-title">Ingeniera de formación, coach por vocación</h2>
             <p class="coach__name">Beatriz Terán · Coach certificada ICF (ACC)</p>
             <p>Soy Beatriz Terán. Llevo más de una década acompañando procesos de desarrollo en Colombia y Latinoamérica. Mi trabajo no consiste en darte frases de motivación: consiste en ayudarte a ver con claridad, ordenar prioridades y sostener las decisiones que tomas.</p>
-            <p>Mi formación en ingeniería y gestión de proyectos define cómo trabajo: objetivos definidos, avances medibles y un método que puedes seguir por tu cuenta cuando el proceso termina.</p>
             <ul class="chips">
               <li>Coach certificada ICF (ACC)</li>
               <li>Ingeniera, gestión de proyectos</li>
               <li>Más de una década acompañando procesos</li>
               <li>100 % online y en español</li>
             </ul>
+            <button type="button" class="more-btn" data-more="bio" aria-expanded="false" aria-controls="coach-mas" data-labels="Leer más sobre cómo trabajo|Mostrar menos"><span class="more-btn__text">Leer más sobre cómo trabajo</span></button>
+            <div class="more-panel" id="coach-mas" hidden>
+              <p>Mi formación en ingeniería y gestión de proyectos define cómo trabajo: objetivos definidos, avances medibles y un método que puedes seguir por tu cuenta cuando el proceso termina.</p>
+              <ul class="fit-list fit-list--yes">
+                <li>Objetivos definidos desde el principio</li>
+                <li>Avances medibles en cada etapa</li>
+                <li>Herramientas propias de autoconocimiento y fortalezas</li>
+                <li>Un método que puedes seguir por tu cuenta</li>
+              </ul>
+            </div>
             <div class="hero__actions">
               <a class="btn btn--primary" href="#agenda">Reserva tu sesión de exploración</a>
               <a class="btn btn--ghost" data-whatsapp="quien-te-acompana" href="#" target="_blank" rel="noopener" hidden><svg class="btn__icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5a8.5 8.5 0 0 1-12.6 7.4L3 20l1.2-4.2A8.5 8.5 0 1 1 20 11.5z"/></svg> Escríbeme por WhatsApp</a>
@@ -649,18 +1157,27 @@ textarea.field__input { min-height: 110px; resize: vertical; }
 
     <section class="section section--white" id="reserva" aria-labelledby="reserva-title">
       <div class="container">
-        <div class="booking-panel">
+        <div class="booking-panel reveal">
           <div class="booking-panel__intro">
             <p class="pill">Primer paso, sin compromiso</p>
             <h2 id="reserva-title">Reserva tu sesión de exploración gratuita</h2>
-            <p class="section__intro">En 45 minutos revisamos tu momento profesional, lo que quieres cambiar y si ALINEA PRO® encaja contigo. Sin compromiso: si no es el proceso adecuado para ti, te lo diré.</p>
+            <p class="section__intro">En 45 minutos revisamos tu momento profesional, lo que quieres cambiar y si ALINEA PRO® encaja contigo.</p>
             <ol class="mini-steps">
               <li><div><strong>Completa el formulario</strong><span>Cuéntame en qué momento estás.</span></div></li>
               <li><div><strong>Elige día y hora</strong><span>El calendario se adapta automáticamente a tu zona horaria.</span></div></li>
               <li><div><strong>Conéctate por Google Meet</strong><span>Recibirás el enlace en el email de confirmación.</span></div></li>
             </ol>
+            <details class="agenda">
+          <summary>Así son los 45 minutos de la sesión de exploración</summary>
+          <!-- TEXTO PROPUESTO: validar el orden de la sesión con Beatriz -->
+          <ol class="agenda__list">
+            <li><span class="agenda__time">0–15 min</span><div><strong>Tu momento</strong><span>Dónde estás y qué te ha traído hasta aquí.</span></div></li>
+            <li><span class="agenda__time">15–30 min</span><div><strong>Lo que quieres cambiar</strong><span>Qué te gustaría conseguir y qué te frena.</span></div></li>
+            <li><span class="agenda__time">30–45 min</span><div><strong>Próximos pasos</strong><span>Si ALINEA PRO® encaja contigo, cómo sería el proceso y la inversión. Si no encaja, te lo diré.</span></div></li>
+          </ol>
+        </details>
           </div>
-          <div class="lead-box" id="agenda">
+          <div class="lead-box glow-border" id="agenda">
             <div class="lead-box__intro" id="lead-intro">
               <p class="lead-box__step">Paso 1 de 2</p>
               <h3 class="lead-box__title">Cuéntame en qué momento estás</h3>
@@ -812,132 +1329,144 @@ textarea.field__input { min-height: 110px; resize: vertical; }
 
     <section class="section" id="preguntas" aria-labelledby="preguntas-title">
       <div class="container">
-        <header class="section__header section__header--center">
+        <header class="section__header section__header--center reveal">
           <p class="pill">Resolviendo dudas</p>
           <h2 id="preguntas-title">Preguntas frecuentes sobre el coaching profesional online</h2>
         </header>
-        <div class="faq">
-        <details class="faq__item" id="faq-primera">
-          <summary class="faq__question">¿Qué pasa en la sesión de exploración? ¿Tiene costo?</summary>
-          <div class="faq__answer">
-            <p>Es una conversación individual de 45 minutos por Google Meet, gratuita y sin compromiso. Revisamos tu momento profesional, lo que quieres cambiar y si ALINEA PRO® encaja contigo. Si no es el proceso adecuado para ti, te lo diré.</p>
+        <div class="faq-tools reveal">
+          <div class="chip-row" role="group" aria-label="Filtrar preguntas">
+            <button type="button" class="chip-btn" data-faq-filter="todas" aria-pressed="true">Todas</button>
+            <button type="button" class="chip-btn" data-faq-filter="sesion" aria-pressed="false">Sesión de exploración</button>
+            <button type="button" class="chip-btn" data-faq-filter="proceso" aria-pressed="false">El proceso</button>
+            <button type="button" class="chip-btn" data-faq-filter="situacion" aria-pressed="false">Tu situación</button>
+            <button type="button" class="chip-btn" data-faq-filter="autoconocimiento" aria-pressed="false">Autoconocimiento</button>
+            <button type="button" class="chip-btn" data-faq-filter="terapia" aria-pressed="false">Coaching y terapia</button>
           </div>
-        </details>
-        <details class="faq__item" id="faq-precio">
-          <summary class="faq__question">¿Cuánto cuesta un proceso de coaching de carrera?</summary>
-          <div class="faq__answer">
-            <p>La inversión depende del formato y de la duración que necesites. Te la explico con transparencia en la sesión de exploración, cuando ya conozco tu situación y tus objetivos. Esa primera sesión es gratuita.</p>
-          </div>
-        </details>
-        <details class="faq__item" id="faq-sesiones">
-          <summary class="faq__question">¿Cuántas sesiones necesito?</summary>
-          <div class="faq__answer">
-            <p>Depende de tu objetivo y de tu punto de partida. Lo definimos en la sesión de exploración y lo revisamos durante el proceso. Cada sesión dura 45 minutos y la frecuencia se adapta a tu agenda.</p>
-          </div>
-        </details>
-        <details class="faq__item" id="faq-online">
-          <summary class="faq__question">¿Cómo funciona el coaching profesional online?</summary>
-          <div class="faq__answer">
-            <p>Las sesiones son individuales, de 45 minutos, por videollamada en Google Meet. Solo necesitas una conexión estable y un espacio tranquilo. La frecuencia es flexible y la acordamos según tu agenda.</p>
-            <p>El formato online permite trabajar con la misma profundidad y te ahorra desplazamientos. Entre sesiones avanzas con ejercicios, un cuaderno de trabajo y tu plan de acción.</p>
-          </div>
-        </details>
-        <details class="faq__item" id="faq-paises">
-          <summary class="faq__question">¿Puedo hacerlo desde cualquier país? ¿Cómo funcionan los horarios?</summary>
-          <div class="faq__answer">
-            <p>Sí. El proceso es 100 % online y en español, así que puedes hacerlo desde España, Latinoamérica, Estados Unidos o cualquier otro país. El calendario de reserva te muestra los horarios disponibles en tu zona horaria.</p>
-          </div>
-        </details>
-        <details class="faq__item" id="faq-dejar">
-          <summary class="faq__question">¿Tengo que dejar mi trabajo para empezar el proceso?</summary>
-          <div class="faq__answer">
-            <p>No. Puedes hacer el proceso mientras sigues en tu trabajo actual. El objetivo es que decidas con criterio y a tu ritmo, sin prisas. A veces la conclusión es cambiar de empresa o de profesión; otras, replantear tu rol actual.</p>
-          </div>
-        </details>
-        <details class="faq__item" id="faq-noquiero">
-          <summary class="faq__question">¿Y si todavía no sé qué quiero?</summary>
-          <div class="faq__answer">
-            <p>Es un punto de partida habitual. La primera etapa de ALINEA PRO® consiste precisamente en reconocer dónde estás y qué es importante para ti ahora. No necesitas llegar con la respuesta: la construimos paso a paso durante el proceso.</p>
-          </div>
-        </details>
-        <details class="faq__item" id="faq-saber">
-          <summary class="faq__question">¿Cómo sé si debo cambiar de trabajo o de profesión?</summary>
-          <div class="faq__answer">
-            <p>Hay señales que conviene escuchar: sientes que podrías aportar más, algo ya no encaja con quien eres hoy o llevas tiempo aplazando una decisión. Antes de cambiar, ayuda distinguir si el malestar tiene que ver con el puesto, con la empresa o con la profesión. En el proceso lo analizamos con criterios concretos para que decidas con información y no por cansancio.</p>
-          </div>
-        </details>
-        <details class="faq__item" id="faq-tarde">
-          <summary class="faq__question">¿Es tarde para cambiar de carrera a los 40 o a los 50?</summary>
-          <div class="faq__answer">
-            <p>No hay una edad límite para replantear tu carrera. A los 40 o a los 50 cuentas con algo que al principio no tenías: experiencia, criterio y capacidades demostradas. No necesitas empezar de cero: se trata de decidir cómo poner en acción lo que ya tienes en tu siguiente etapa profesional.</p>
-          </div>
-        </details>
-        <details class="faq__item" id="faq-cero">
-          <summary class="faq__question">¿Cómo cambiar de trabajo sin empezar de cero?</summary>
-          <div class="faq__answer">
-            <p>Partiendo de lo que ya tienes. Identificamos tus capacidades, fortalezas y logros, y vemos cómo llevarlos a la etapa que quieres construir. Así diseñas un cambio realista, con un plan por pasos, en lugar de un salto al vacío.</p>
-          </div>
-        </details>
-        <details class="faq__item" id="faq-miedo">
-          <summary class="faq__question">Me da miedo cambiar de carrera, ¿es normal? ¿Cómo se trabaja?</summary>
-          <div class="faq__answer">
-            <p>Sí, es normal sentir dudas ante una decisión importante. En el proceso trabajamos para que esa sensación no decida por ti: aclaramos opciones, evaluamos riesgos y avanzamos con pasos concretos que puedes sostener.</p>
-          </div>
-        </details>
-        <details class="faq__item" id="faq-estanc">
-          <summary class="faq__question">¿Cómo salir del estancamiento profesional?</summary>
-          <div class="faq__answer">
-            <p>El estancamiento profesional suele aparecer cuando tu trabajo funciona pero ya no te satisface. Para salir de él, primero conviene entender qué lo provoca y qué quieres en su lugar; después, convertir esa respuesta en decisiones y acciones medibles. Es el recorrido que hacemos en ALINEA PRO®.</p>
-          </div>
-        </details>
-        <details class="faq__item" id="faq-reorient">
-          <summary class="faq__question">¿Qué es la reorientación profesional y en qué se diferencia del coaching de carrera?</summary>
-          <div class="faq__answer">
-            <p>La reorientación profesional es el proceso de replantear hacia dónde quieres llevar tu carrera, normalmente a partir de la experiencia que ya tienes. El coaching de carrera es una forma de acompañar ese proceso: no te digo qué camino elegir; te ayudo a reconocer tus opciones, decidir y avanzar con un plan.</p>
-          </div>
-        </details>
-        <details class="faq__item" id="faq-fortalezas">
-          <summary class="faq__question">¿Cómo identificar mis fortalezas profesionales?</summary>
-          <div class="faq__answer">
-            <p>Tus fortalezas suelen aparecer en lo que haces bien con naturalidad, en lo que otras personas te reconocen y en los logros que más valoras. En ALINEA PRO® las identificamos con herramientas propias de autoconocimiento y con el análisis de tu trayectoria, para usarlas como base de tus decisiones.</p>
-          </div>
-        </details>
-        <details class="faq__item" id="faq-proposito">
-          <summary class="faq__question">¿Cómo encontrar mi propósito profesional?</summary>
-          <div class="faq__answer">
-            <p>El propósito profesional rara vez aparece de golpe: se construye al conectar tus valores, tus fortalezas y el impacto que quieres tener. En el proceso lo trabajamos de forma práctica, para que se traduzca en criterios de decisión y en pasos concretos.</p>
-          </div>
-        </details>
-        <details class="faq__item" id="faq-solo">
-          <summary class="faq__question">Ya intenté resolverlo por mi cuenta. ¿Qué cambia con un proceso de coaching?</summary>
-          <div class="faq__answer">
-            <p>Pensar en ello a solas suele llevar a dar vueltas a las mismas ideas. Un proceso acompañado aporta una mirada externa, estructura y seguimiento: cada sesión termina con acuerdos concretos y revisamos tus avances en la siguiente. Esa combinación es la que convierte la reflexión en decisiones.</p>
-          </div>
-        </details>
-        <details class="faq__item" id="faq-psico">
-          <summary class="faq__question">¿En qué se diferencia el coaching de la terapia psicológica?</summary>
-          <div class="faq__answer">
-            <p>El coaching se centra en el presente y en el futuro: objetivos, decisiones y acciones. No trata problemas de salud mental ni sustituye la atención psicológica, psiquiátrica o médica. Si en la sesión de exploración veo que necesitas otro tipo de acompañamiento, te lo diré y te recomendaré acudir a un profesional de la salud.</p>
-          </div>
-        </details>
+          <label class="faq-search"><span class="visually-hidden">Buscar en las preguntas frecuentes</span><input class="faq-search__input" type="search" placeholder="Busca en las preguntas: precio, horarios, 40 años…" data-faq-search></label>
         </div>
+        <div class="faq" data-faq data-stagger>
+          <details class="faq__item" id="faq-primera" data-cat="sesion">
+            <summary class="faq__question">¿Qué pasa en la sesión de exploración? ¿Tiene costo?</summary>
+            <div class="faq__answer">
+              <p>Es una conversación individual de 45 minutos por Google Meet, gratuita y sin compromiso. Revisamos tu momento profesional, lo que quieres cambiar y si ALINEA PRO® encaja contigo. Si no es el proceso adecuado para ti, te lo diré.</p>
+            </div>
+          </details>
+          <details class="faq__item" id="faq-precio" data-cat="sesion">
+            <summary class="faq__question">¿Cuánto cuesta un proceso de coaching de carrera?</summary>
+            <div class="faq__answer">
+              <p>La inversión depende del formato y de la duración que necesites. Te la explico con transparencia en la sesión de exploración, cuando ya conozco tu situación y tus objetivos. Esa primera sesión es gratuita.</p>
+            </div>
+          </details>
+          <details class="faq__item" id="faq-sesiones" data-cat="proceso">
+            <summary class="faq__question">¿Cuántas sesiones necesito?</summary>
+            <div class="faq__answer">
+              <p>Depende de tu objetivo y de tu punto de partida. Lo definimos en la sesión de exploración y lo revisamos durante el proceso. Cada sesión dura 45 minutos y la frecuencia se adapta a tu agenda.</p>
+            </div>
+          </details>
+          <details class="faq__item" id="faq-online" data-cat="proceso">
+            <summary class="faq__question">¿Cómo funciona el coaching profesional online?</summary>
+            <div class="faq__answer">
+              <p>Las sesiones son individuales, de 45 minutos, por videollamada en Google Meet. Solo necesitas una conexión estable y un espacio tranquilo. La frecuencia es flexible y la acordamos según tu agenda.</p>
+              <p>El formato online permite trabajar con la misma profundidad y te ahorra desplazamientos. Entre sesiones avanzas con ejercicios, un cuaderno de trabajo y tu plan de acción.</p>
+            </div>
+          </details>
+          <details class="faq__item" id="faq-paises" data-cat="proceso">
+            <summary class="faq__question">¿Puedo hacerlo desde cualquier país? ¿Cómo funcionan los horarios?</summary>
+            <div class="faq__answer">
+              <p>Sí. El proceso es 100 % online y en español, así que puedes hacerlo desde España, Latinoamérica, Estados Unidos o cualquier otro país. El calendario de reserva te muestra los horarios disponibles en tu zona horaria.</p>
+            </div>
+          </details>
+          <details class="faq__item" id="faq-dejar" data-cat="situacion">
+            <summary class="faq__question">¿Tengo que dejar mi trabajo para empezar el proceso?</summary>
+            <div class="faq__answer">
+              <p>No. Puedes hacer el proceso mientras sigues en tu trabajo actual. El objetivo es que decidas con criterio y a tu ritmo, sin prisas. A veces la conclusión es cambiar de empresa o de profesión; otras, replantear tu rol actual.</p>
+            </div>
+          </details>
+          <details class="faq__item" id="faq-noquiero" data-cat="situacion">
+            <summary class="faq__question">¿Y si todavía no sé qué quiero?</summary>
+            <div class="faq__answer">
+              <p>Es un punto de partida habitual. La primera etapa de ALINEA PRO® consiste precisamente en reconocer dónde estás y qué es importante para ti ahora. No necesitas llegar con la respuesta: la construimos paso a paso durante el proceso.</p>
+            </div>
+          </details>
+          <details class="faq__item" id="faq-saber" data-cat="situacion">
+            <summary class="faq__question">¿Cómo sé si debo cambiar de trabajo o de profesión?</summary>
+            <div class="faq__answer">
+              <p>Hay señales que conviene escuchar: sientes que podrías aportar más, algo ya no encaja con quien eres hoy o llevas tiempo aplazando una decisión. Antes de cambiar, ayuda distinguir si el malestar tiene que ver con el puesto, con la empresa o con la profesión. En el proceso lo analizamos con criterios concretos para que decidas con información y no por cansancio.</p>
+            </div>
+          </details>
+          <details class="faq__item" id="faq-tarde" data-cat="situacion">
+            <summary class="faq__question">¿Es tarde para cambiar de carrera a los 40 o a los 50?</summary>
+            <div class="faq__answer">
+              <p>No hay una edad límite para replantear tu carrera. A los 40 o a los 50 cuentas con algo que al principio no tenías: experiencia, criterio y capacidades demostradas. No necesitas empezar de cero: se trata de decidir cómo poner en acción lo que ya tienes en tu siguiente etapa profesional.</p>
+            </div>
+          </details>
+          <details class="faq__item" id="faq-cero" data-cat="situacion">
+            <summary class="faq__question">¿Cómo cambiar de trabajo sin empezar de cero?</summary>
+            <div class="faq__answer">
+              <p>Partiendo de lo que ya tienes. Identificamos tus capacidades, fortalezas y logros, y vemos cómo llevarlos a la etapa que quieres construir. Así diseñas un cambio realista, con un plan por pasos, en lugar de un salto al vacío.</p>
+            </div>
+          </details>
+          <details class="faq__item" id="faq-miedo" data-cat="situacion">
+            <summary class="faq__question">Me da miedo cambiar de carrera, ¿es normal? ¿Cómo se trabaja?</summary>
+            <div class="faq__answer">
+              <p>Sí, es normal sentir dudas ante una decisión importante. En el proceso trabajamos para que esa sensación no decida por ti: aclaramos opciones, evaluamos riesgos y avanzamos con pasos concretos que puedes sostener.</p>
+            </div>
+          </details>
+          <details class="faq__item" id="faq-estanc" data-cat="situacion">
+            <summary class="faq__question">¿Cómo salir del estancamiento profesional?</summary>
+            <div class="faq__answer">
+              <p>El estancamiento profesional suele aparecer cuando tu trabajo funciona pero ya no te satisface. Para salir de él, primero conviene entender qué lo provoca y qué quieres en su lugar; después, convertir esa respuesta en decisiones y acciones medibles. Es el recorrido que hacemos en ALINEA PRO®.</p>
+            </div>
+          </details>
+          <details class="faq__item" id="faq-reorient" data-cat="situacion">
+            <summary class="faq__question">¿Qué es la reorientación profesional y en qué se diferencia del coaching de carrera?</summary>
+            <div class="faq__answer">
+              <p>La reorientación profesional es el proceso de replantear hacia dónde quieres llevar tu carrera, normalmente a partir de la experiencia que ya tienes. El coaching de carrera es una forma de acompañar ese proceso: no te digo qué camino elegir; te ayudo a reconocer tus opciones, decidir y avanzar con un plan.</p>
+            </div>
+          </details>
+          <details class="faq__item" id="faq-fortalezas" data-cat="autoconocimiento">
+            <summary class="faq__question">¿Cómo identificar mis fortalezas profesionales?</summary>
+            <div class="faq__answer">
+              <p>Tus fortalezas suelen aparecer en lo que haces bien con naturalidad, en lo que otras personas te reconocen y en los logros que más valoras. En ALINEA PRO® las identificamos con herramientas propias de autoconocimiento y con el análisis de tu trayectoria, para usarlas como base de tus decisiones.</p>
+            </div>
+          </details>
+          <details class="faq__item" id="faq-proposito" data-cat="autoconocimiento">
+            <summary class="faq__question">¿Cómo encontrar mi propósito profesional?</summary>
+            <div class="faq__answer">
+              <p>El propósito profesional rara vez aparece de golpe: se construye al conectar tus valores, tus fortalezas y el impacto que quieres tener. En el proceso lo trabajamos de forma práctica, para que se traduzca en criterios de decisión y en pasos concretos.</p>
+            </div>
+          </details>
+          <details class="faq__item" id="faq-solo" data-cat="proceso">
+            <summary class="faq__question">Ya intenté resolverlo por mi cuenta. ¿Qué cambia con un proceso de coaching?</summary>
+            <div class="faq__answer">
+              <p>Pensar en ello a solas suele llevar a dar vueltas a las mismas ideas. Un proceso acompañado aporta una mirada externa, estructura y seguimiento: cada sesión termina con acuerdos concretos y revisamos tus avances en la siguiente. Esa combinación es la que convierte la reflexión en decisiones.</p>
+            </div>
+          </details>
+          <details class="faq__item" id="faq-psico" data-cat="terapia">
+            <summary class="faq__question">¿En qué se diferencia el coaching de la terapia psicológica?</summary>
+            <div class="faq__answer">
+              <p>El coaching se centra en el presente y en el futuro: objetivos, decisiones y acciones. No trata problemas de salud mental ni sustituye la atención psicológica, psiquiátrica o médica. Si en la sesión de exploración veo que necesitas otro tipo de acompañamiento, te lo diré y te recomendaré acudir a un profesional de la salud.</p>
+            </div>
+          </details>
+        </div>
+        <p class="faq-empty" data-faq-empty hidden>No hay preguntas con ese texto. Escríbeme y lo resolvemos en la sesión de exploración.</p>
       </div>
     </section>
 
-    <section class="section section--white" id="otros-acompanamientos" aria-labelledby="otros-title">
+    <section class="section" id="otros-acompanamientos" aria-labelledby="otros-title">
       <div class="container">
-        <header class="section__header">
+        <header class="section__header reveal">
           <p class="pill">Más servicios</p>
           <h2 id="otros-title">Otros acompañamientos de UKUU Coaching</h2>
         </header>
         <!-- TEXTO PROPUESTO: validar la descripción de cada servicio -->
-        <div class="grid grid--2">
-          <article class="card">
+        <div class="grid grid--2" data-stagger>
+          <article class="card tilt">
             <h3 class="card__title">Orientación para jóvenes</h3>
             <p>Acompañamiento para elegir estudios o un primer rumbo profesional con criterio propio.</p>
             <p><a href="{{URL_CONTACTO}}">Pide información</a></p>
           </article>
-          <article class="card">
+          <article class="card tilt">
             <h3 class="card__title">Coaching ejecutivo</h3>
             <p>Procesos para personas con responsabilidades de dirección que quieren fortalecer su liderazgo y su toma de decisiones.</p>
             <p><a href="{{URL_CONTACTO}}">Pide información</a></p>
@@ -948,11 +1477,11 @@ textarea.field__input { min-height: 110px; resize: vertical; }
 
     <section class="section" aria-labelledby="cta-title">
       <div class="container">
-        <div class="cta-band">
+        <div class="cta-band reveal">
           <p class="pill pill--night">Primer paso</p>
           <h2 id="cta-title">¿Hablamos de tu siguiente etapa profesional?</h2>
           <p>Reserva tu sesión de exploración gratuita de 45 minutos. Sin compromiso: si ALINEA PRO® no encaja contigo, te lo diré.</p>
-          <a class="btn btn--primary" href="#agenda">Reserva tu sesión</a>
+          <a class="btn btn--primary btn--shine" href="#agenda">Reserva tu sesión</a>
         </div>
       </div>
     </section>
@@ -1625,6 +2154,386 @@ textarea.field__input { min-height: 110px; resize: vertical; }
 
   /* ---------- Año del pie de página ---------- */
   document.querySelectorAll("[data-year]").forEach(function (el) { el.textContent = String(new Date().getFullYear()); });
+})();
+
+/* ==========================================================================
+   UKUU Coaching · Interacción y movimiento (sin dependencias)
+   Aparición al hacer scroll, cifras animadas, inclinación y focos de luz,
+   selector «¿Te reconoces?», proceso desplegable, pestañas, autodiagnóstico
+   y filtros de preguntas frecuentes. Respeta «reducir movimiento».
+   ========================================================================== */
+(function () {
+  "use strict";
+
+  var CFG = window.UKUU_CONFIG || {};
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var finePointer = window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  var hasIO = "IntersectionObserver" in window;
+  window.dataLayer = window.dataLayer || [];
+  function track(eventName, data) {
+    var payload = { event: eventName, landing_version: CFG.version || "" };
+    if (data) Object.keys(data).forEach(function (key) { payload[key] = data[key]; });
+    window.dataLayer.push(payload);
+  }
+  function smooth() { return reduceMotion ? "auto" : "smooth"; }
+
+  /* ---------- Aparición al hacer scroll ---------- */
+  document.querySelectorAll("[data-stagger]").forEach(function (parent) {
+    Array.prototype.forEach.call(parent.children, function (child, index) {
+      child.classList.add("reveal");
+      child.style.setProperty("--delay", (index * 0.07).toFixed(2) + "s");
+    });
+  });
+  var revealItems = document.querySelectorAll(".reveal");
+  if (hasIO && !reduceMotion && revealItems.length) {
+    document.documentElement.classList.add("fx");
+    var revealObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        var el = entry.target;
+        el.classList.add("is-visible");
+        revealObserver.unobserve(el);
+        /* Al terminar, se quita la clase para que el hover responda rápido */
+        var done = function () { el.classList.remove("reveal"); el.style.removeProperty("--delay"); };
+        el.addEventListener("transitionend", done, { once: true });
+        setTimeout(done, 1700);
+      });
+    }, { rootMargin: "0px 0px -6% 0px", threshold: 0.06 });
+    revealItems.forEach(function (el) { revealObserver.observe(el); });
+    /* Seguridad: nada visible en pantalla se queda oculto */
+    setTimeout(function () {
+      revealItems.forEach(function (el) {
+        if (!el.classList.contains("is-visible") && el.getBoundingClientRect().top < window.innerHeight) el.classList.add("is-visible");
+      });
+    }, 1600);
+  }
+
+  /* ---------- Cifras que cuentan hasta su valor ---------- */
+  function countUp(el) {
+    var end = parseFloat(el.getAttribute("data-count"));
+    if (isNaN(end)) return;
+    var start = null, duration = 1300;
+    el.textContent = "0";
+    function step(now) {
+      if (start === null) start = now;
+      var t = Math.min(1, (now - start) / duration);
+      el.textContent = String(Math.round(end * (1 - Math.pow(1 - t, 3))));
+      if (t < 1) window.requestAnimationFrame(step);
+    }
+    window.requestAnimationFrame(step);
+  }
+  var counters = document.querySelectorAll("[data-count]");
+  if (hasIO && !reduceMotion && counters.length) {
+    var countObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        countUp(entry.target);
+        countObserver.unobserve(entry.target);
+      });
+    }, { threshold: 0.6 });
+    counters.forEach(function (el) { countObserver.observe(el); });
+  }
+
+  /* ---------- Inclinación con reflejo y focos de luz (solo escritorio) ---------- */
+  if (finePointer && !reduceMotion) {
+    document.querySelectorAll(".tilt").forEach(function (el) {
+      var frame = 0;
+      var max = parseFloat(el.getAttribute("data-tilt") || "6");
+      el.addEventListener("pointermove", function (e) {
+        var rect = el.getBoundingClientRect();
+        var x = (e.clientX - rect.left) / rect.width;
+        var y = (e.clientY - rect.top) / rect.height;
+        window.cancelAnimationFrame(frame);
+        frame = window.requestAnimationFrame(function () {
+          el.style.setProperty("--ry", ((x - 0.5) * max * 2).toFixed(2) + "deg");
+          el.style.setProperty("--rx", ((0.5 - y) * max * 2).toFixed(2) + "deg");
+          el.style.setProperty("--gx", (x * 100).toFixed(1) + "%");
+          el.style.setProperty("--gy", (y * 100).toFixed(1) + "%");
+          el.classList.add("is-tilting");
+        });
+      });
+      el.addEventListener("pointerleave", function () {
+        window.cancelAnimationFrame(frame);
+        el.classList.remove("is-tilting");
+      });
+    });
+    document.querySelectorAll(".spotlight").forEach(function (el) {
+      var frame = 0;
+      el.addEventListener("pointermove", function (e) {
+        var rect = el.getBoundingClientRect();
+        window.cancelAnimationFrame(frame);
+        frame = window.requestAnimationFrame(function () {
+          el.style.setProperty("--mx", (e.clientX - rect.left).toFixed(0) + "px");
+          el.style.setProperty("--my", (e.clientY - rect.top).toFixed(0) + "px");
+          el.classList.add("is-lit");
+        });
+      });
+      el.addEventListener("pointerleave", function () { el.classList.remove("is-lit"); });
+    });
+  }
+
+  /* ---------- Cabecera con sombra al hacer scroll ---------- */
+  var header = document.querySelector(".site-header");
+  if (header) {
+    var onScrollHeader = function () { header.classList.toggle("is-scrolled", window.scrollY > 8); };
+    window.addEventListener("scroll", onScrollHeader, { passive: true });
+    onScrollHeader();
+  }
+
+  /* ---------- Rellenar el formulario desde el selector o el autodiagnóstico ---------- */
+  function prefill(momento, source) {
+    var form = document.getElementById("lead-form");
+    var select = document.getElementById("f-momento");
+    var box = document.getElementById("agenda");
+    if (select && form && !form.hidden && momento) {
+      var match = Array.prototype.filter.call(select.options, function (o) { return o.text === momento || o.value === momento; })[0];
+      if (match) {
+        select.value = match.value;
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+        select.classList.remove("is-prefilled");
+        void select.offsetWidth;
+        select.classList.add("is-prefilled");
+      }
+    }
+    track("prefill_form", { origen: source || "", momento: momento || "" });
+    if (box) box.scrollIntoView({ behavior: smooth(), block: "start" });
+    if (finePointer && form && !form.hidden) {
+      setTimeout(function () {
+        var name = document.getElementById("f-nombre");
+        if (name && !name.value) name.focus({ preventScroll: true });
+      }, reduceMotion ? 0 : 650);
+    }
+  }
+  document.addEventListener("click", function (e) {
+    var trigger = e.target.closest ? e.target.closest("[data-prefill]") : null;
+    if (trigger) prefill(trigger.getAttribute("data-prefill"), trigger.getAttribute("data-source") || "selector");
+  });
+
+  /* ---------- Selector «¿Te reconoces?» ---------- */
+  document.querySelectorAll("[data-selector]").forEach(function (selector) {
+    var options = selector.querySelectorAll(".selector__option");
+    var empty = selector.querySelector(".selector__empty");
+    var answers = selector.querySelectorAll("[data-answer]");
+    options.forEach(function (option) {
+      option.addEventListener("click", function () {
+        var key = option.getAttribute("data-key");
+        options.forEach(function (o) { o.setAttribute("aria-pressed", String(o === option)); });
+        answers.forEach(function (a) { a.hidden = a.getAttribute("data-answer") !== key; });
+        if (empty) empty.hidden = true;
+        track("selector_pick", { situacion: key });
+        if (window.matchMedia("(max-width: 900px)").matches) {
+          var answer = selector.querySelector('[data-answer="' + key + '"]');
+          if (answer) answer.scrollIntoView({ behavior: smooth(), block: "nearest" });
+        }
+      });
+    });
+  });
+
+  /* ---------- Paneles «Ver más» ---------- */
+  document.querySelectorAll("[data-more]").forEach(function (button) {
+    var panel = document.getElementById(button.getAttribute("aria-controls"));
+    if (!panel) return;
+    var labels = (button.getAttribute("data-labels") || "").split("|");
+    button.addEventListener("click", function () {
+      var open = button.getAttribute("aria-expanded") === "true";
+      button.setAttribute("aria-expanded", String(!open));
+      panel.hidden = open;
+      var text = button.querySelector(".more-btn__text");
+      if (text && labels.length === 2) text.textContent = open ? labels[0] : labels[1];
+      if (!open) track("detail_open", { detalle: button.getAttribute("data-more") });
+    });
+  });
+
+  /* ---------- Proceso: una etapa abierta y línea que se llena al hacer scroll ---------- */
+  document.querySelectorAll("[data-path]").forEach(function (path) {
+    var steps = path.querySelectorAll(".path__step");
+    function openStep(step, fromUser) {
+      steps.forEach(function (s) {
+        var isTarget = s === step;
+        var toggle = s.querySelector(".path__toggle");
+        var detail = s.querySelector(".path__detail");
+        var expand = isTarget && !(fromUser && toggle.getAttribute("aria-expanded") === "true");
+        toggle.setAttribute("aria-expanded", String(expand));
+        detail.hidden = !expand;
+        s.classList.toggle("is-open", expand);
+      });
+      if (fromUser) track("process_step", { paso: step.querySelector(".path__title").textContent.trim() });
+    }
+    steps.forEach(function (step) {
+      step.querySelector(".path__toggle").addEventListener("click", function () { openStep(step, true); });
+    });
+    path.openStep = openStep;
+    if (reduceMotion) { path.style.setProperty("--fill", "1"); return; }
+    var ticking = false;
+    var fill = function () {
+      ticking = false;
+      var rect = path.getBoundingClientRect();
+      var progress = (window.innerHeight * 0.72 - rect.top) / rect.height;
+      path.style.setProperty("--fill", Math.max(0, Math.min(1, progress)).toFixed(3));
+    };
+    window.addEventListener("scroll", function () {
+      if (!ticking) { ticking = true; window.requestAnimationFrame(fill); }
+    }, { passive: true });
+    fill();
+  });
+  /* Enlaces de la tarjeta «sendero» hacia cada etapa */
+  document.querySelectorAll("[data-step-link]").forEach(function (link) {
+    link.addEventListener("click", function (e) {
+      var step = document.getElementById(link.getAttribute("data-step-link"));
+      var path = step ? step.closest("[data-path]") : null;
+      if (!step || !path || !path.openStep) return;
+      e.preventDefault();
+      if (step.querySelector(".path__toggle").getAttribute("aria-expanded") !== "true") path.openStep(step, false);
+      step.scrollIntoView({ behavior: smooth(), block: "center" });
+      track("route_step_click", { paso: link.textContent.trim().slice(0, 60) });
+    });
+  });
+
+  /* ---------- Pestañas accesibles ---------- */
+  document.querySelectorAll("[data-tabs]").forEach(function (wrap) {
+    var tabs = Array.prototype.slice.call(wrap.querySelectorAll('[role="tab"]'));
+    function select(tab, focus, silent) {
+      tabs.forEach(function (t) {
+        var on = t === tab;
+        t.setAttribute("aria-selected", String(on));
+        t.tabIndex = on ? 0 : -1;
+        var panel = document.getElementById(t.getAttribute("aria-controls"));
+        if (panel) panel.hidden = !on;
+      });
+      if (focus) tab.focus();
+      var list = tab.parentElement;
+      if (list && list.scrollWidth > list.clientWidth) list.scrollTo({ left: tab.offsetLeft - 16, behavior: smooth() });
+      if (!silent) track("tab_view", { pestana: tab.textContent.trim() });
+    }
+    tabs.forEach(function (tab, index) {
+      tab.addEventListener("click", function () { select(tab, false); });
+      tab.addEventListener("keydown", function (e) {
+        var next = null;
+        if (e.key === "ArrowRight") next = tabs[(index + 1) % tabs.length];
+        else if (e.key === "ArrowLeft") next = tabs[(index - 1 + tabs.length) % tabs.length];
+        else if (e.key === "Home") next = tabs[0];
+        else if (e.key === "End") next = tabs[tabs.length - 1];
+        if (next) { e.preventDefault(); select(next, true); }
+      });
+    });
+    /* Un enlace con #id de una pestaña (por ejemplo #estancamiento-profesional) la abre */
+    function fromHash() {
+      if (!window.location.hash) return;
+      var id = decodeURIComponent(window.location.hash.slice(1));
+      var panel = document.getElementById(id);
+      if (!panel || !wrap.contains(panel) || panel.getAttribute("role") !== "tabpanel") return;
+      var tab = tabs.filter(function (t) { return t.getAttribute("aria-controls") === id; })[0];
+      if (tab) { select(tab, false, true); wrap.scrollIntoView({ behavior: "auto", block: "start" }); }
+    }
+    fromHash();
+    window.addEventListener("hashchange", fromHash);
+  });
+
+  /* ---------- Autodiagnóstico ---------- */
+  var quiz = document.querySelector("[data-quiz]");
+  if (quiz) {
+    var quizSteps = quiz.querySelectorAll(".quiz__step");
+    var quizResult = quiz.querySelector(".quiz__result");
+    var quizBar = quiz.querySelector(".quiz__progress span");
+    var quizCount = quiz.querySelector(".quiz__count");
+    var scores = {}, history = [], current = 0;
+    var ORDER = ["estancamiento", "desconexion", "dudas", "postergacion", "cansancio"];
+    var showStep = function (index, focus) {
+      current = index;
+      quizSteps.forEach(function (s, i) { s.hidden = i !== index; });
+      quizResult.hidden = true;
+      quizBar.style.setProperty("--p", ((index + 1) / (quizSteps.length + 1) * 100).toFixed(0) + "%");
+      quizCount.hidden = false;
+      quizCount.textContent = "Pregunta " + (index + 1) + " de " + quizSteps.length;
+      if (focus) { var first = quizSteps[index].querySelector(".quiz__option"); if (first) first.focus({ preventScroll: true }); }
+    };
+    var finish = function () {
+      var best = ORDER[0];
+      ORDER.forEach(function (k) { if ((scores[k] || 0) > (scores[best] || 0)) best = k; });
+      var answer = document.querySelector('[data-answer="' + best + '"]');
+      var option = document.querySelector('.selector__option[data-key="' + best + '"]');
+      quizSteps.forEach(function (s) { s.hidden = true; });
+      if (answer) {
+        quizResult.querySelector(".quiz__result-title").textContent = answer.querySelector("h3").textContent;
+        quizResult.querySelector(".quiz__result-text").textContent = answer.querySelector(".selector__answer-text").textContent;
+        quizResult.querySelector(".quiz__result-quote").textContent = option ? option.querySelector(".selector__quote").textContent : "";
+        var tagList = quizResult.querySelector(".quiz__result-tags");
+        tagList.textContent = "";
+        answer.querySelectorAll(".tags li").forEach(function (li) { var item = document.createElement("li"); item.textContent = li.textContent; tagList.appendChild(item); });
+        var cta = quizResult.querySelector("[data-prefill]");
+        var source = answer.querySelector("[data-prefill]");
+        if (cta && source) cta.setAttribute("data-prefill", source.getAttribute("data-prefill"));
+      }
+      quizResult.hidden = false;
+      quizBar.style.setProperty("--p", "100%");
+      quizCount.hidden = true;
+      track("quiz_complete", { resultado: best });
+    };
+    quiz.addEventListener("click", function (e) {
+      var option = e.target.closest(".quiz__option");
+      if (option) {
+        var delta = {};
+        option.getAttribute("data-score").split(",").forEach(function (pair) {
+          var kv = pair.split(":");
+          delta[kv[0]] = Number(kv[1]);
+          scores[kv[0]] = (scores[kv[0]] || 0) + Number(kv[1]);
+        });
+        history.push(delta);
+        if (current < quizSteps.length - 1) showStep(current + 1, true); else finish();
+        return;
+      }
+      if (e.target.closest(".quiz__back")) {
+        var last = history.pop();
+        if (last) Object.keys(last).forEach(function (k) { scores[k] -= last[k]; });
+        showStep(Math.max(0, current - 1), true);
+        return;
+      }
+      if (e.target.closest("[data-quiz-restart]")) {
+        scores = {}; history = [];
+        showStep(0, true);
+        track("quiz_restart", {});
+      }
+    });
+    showStep(0, false);
+  }
+
+  /* ---------- Preguntas frecuentes: filtros y búsqueda ---------- */
+  var faqList = document.querySelector("[data-faq]");
+  if (faqList) {
+    var faqItems = faqList.querySelectorAll(".faq__item");
+    var chips = document.querySelectorAll("[data-faq-filter]");
+    var search = document.querySelector("[data-faq-search]");
+    var emptyMsg = document.querySelector("[data-faq-empty]");
+    var category = "todas";
+    var normalize = function (s) { return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase(); };
+    var applyFaq = function () {
+      var q = normalize((search && search.value || "").trim());
+      var shown = 0;
+      faqItems.forEach(function (item) {
+        var okCategory = category === "todas" || item.getAttribute("data-cat") === category;
+        var okText = !q || normalize(item.textContent).indexOf(q) > -1;
+        item.hidden = !(okCategory && okText);
+        if (!item.hidden) { shown++; item.classList.add("is-visible"); }
+      });
+      if (emptyMsg) emptyMsg.hidden = shown > 0;
+    };
+    chips.forEach(function (chip) {
+      chip.addEventListener("click", function () {
+        category = chip.getAttribute("data-faq-filter");
+        chips.forEach(function (c) { c.setAttribute("aria-pressed", String(c === chip)); });
+        applyFaq();
+        track("faq_filter", { categoria: category });
+      });
+    });
+    if (search) {
+      var searchTimer = 0;
+      search.addEventListener("input", function () {
+        applyFaq();
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(function () { if (search.value.trim()) track("faq_search", { texto: search.value.trim().slice(0, 60) }); }, 900);
+      });
+    }
+  }
 })();
   </script>
 </body>

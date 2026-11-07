@@ -1,6 +1,6 @@
 # Landing UKUU Coaching · ALINEA PRO®
 
-Dos versiones finales de la landing para captar contactos y agendar la **sesión de exploración gratuita** (45 minutos, Google Meet) con Calendly, con el diseño de marca de UKUU: logo, paleta exacta y estilo de la página de referencia.
+Dos versiones finales de la landing para captar contactos y agendar la **sesión de exploración gratuita** (45 minutos, Google Meet) con Calendly, con el diseño de marca de UKUU (logo, paleta exacta y estilo de la página de referencia), elementos interactivos y contenido desplegable: lo esencial a la vista y el detalle para quien quiera profundizar.
 
 ## Contenido de la carpeta
 
@@ -23,6 +23,28 @@ Cada página es un único archivo autónomo: CSS en el `<head>`, logo incrustado
 - **Elementos tomados de la página de referencia:** franja superior, etiquetas en mono, sección oscura de resultados, tarjeta oscura «En la práctica», tarjeta de la coach con foto, preguntas con icono redondo, banda final oscura, barra de progreso de lectura y botón de WhatsApp.
 - **Motivo del logo:** el sendero jade que lleva al sol. El método ALINEA PRO® se dibuja como un sendero de 5 etapas cuya última parada es el sol, y el subrayado del titular va del jade al sol.
 - Todo se ajusta desde las variables de `:root`, al inicio del `<style>`.
+
+## Elementos interactivos y movimiento
+
+| Elemento | Versión | Qué hace |
+|---|---|---|
+| Luces en degradado y foco de luz | A y B | Halos jade, oro y sol que se mueven despacio en la portada; un foco de luz sigue el puntero en la portada y en las secciones oscuras. |
+| Botones con rebote y brillo | A y B | Al pasar el puntero, el botón sube y lo cruza un reflejo; los botones principales brillan solos cada pocos segundos. |
+| Tarjetas con inclinación | A y B | Inclinación 3D y reflejo de luz que siguen al puntero (resultados, tarjeta «sendero», otros servicios). |
+| Aparición al hacer scroll y cifras | A y B | Las secciones aparecen suavemente; las cifras (45 min, 5 etapas, +10 años, 100 %) cuentan hasta su valor. |
+| Borde de luz | A y B | El formulario (y el autodiagnóstico en B) tiene un borde en degradado jade → oro → sol que gira. |
+| Selector «¿Te reconoces?» | A y B | La persona elige la frase que más se parece a lo que vive y ve cómo se trabaja; «Quiero trabajar esto» rellena el campo «Lo que más te describe hoy» y la lleva al formulario. |
+| Resultados desplegables | A y B | Cada resultado muestra «Cómo lo trabajamos» al abrirlo. |
+| Proceso desplegable | A y B | Cada etapa de ALINEA PRO® se abre con «Qué hacemos» y «Qué te llevas»; la línea del sendero se llena al hacer scroll y la última etapa brilla como el sol. |
+| Pestañas «En la práctica» | A y B | Formato, qué incluye, inversión y desde dónde. |
+| Agenda de la sesión y «Leer más» | A y B | Así son los 45 minutos de la sesión de exploración; biografía ampliada de Beatriz. |
+| Banda de temas en movimiento | A y B | Reorientación, transición, liderazgo, propósito…; se detiene al pasar el puntero. |
+| Autodiagnóstico de 30 segundos | B | Tres preguntas y un resultado con el punto de partida; el botón rellena el formulario con ese resultado. |
+| Temas en pestañas | B | Reorientación, 40/50, estancamiento, liderazgo y propósito. Un enlace con `#estancamiento-profesional` (u otro id de tema) abre directamente esa pestaña: úsalo desde el blog. |
+| Preguntas frecuentes con filtros y buscador | B | Filtra por categoría o por texto (ignora tildes). |
+| Tarjeta «sendero» | B | Cada etapa enlaza con su detalle en la sección del proceso. |
+
+Accesibilidad: todo funciona con teclado (las pestañas con las flechas), los efectos de puntero solo se activan en escritorio y, si el sistema tiene activado «reducir movimiento», las animaciones se desactivan y el contenido se muestra directamente. Todo el texto desplegable sigue en el HTML, así que Google lo indexa.
 
 ## Datos ya configurados (tomados de la página de referencia)
 
@@ -65,6 +87,7 @@ Pendiente sin marcador:
 - **Testimonios:** la sección está oculta (`hidden`) hasta tener testimonios reales y con permiso. Para activarla, quita `hidden` y reemplaza el texto de las tarjetas.
 - **Número de sesiones de ALINEA PRO®:** comentario `PENDIENTE` en la tarjeta «En la práctica».
 - **«Orientación para jóvenes» y «Coaching ejecutivo» (B):** son textos propuestos; valídalos.
+- **Textos propuestos para validar con Beatriz:** respuestas del selector y del autodiagnóstico, detalles de «Cómo lo trabajamos» y de cada etapa, y la agenda de los 45 minutos (comentario `TEXTO PROPUESTO`).
 - **Banner de cookies:** ver sección 5.
 
 ### Datos que no coinciden entre el formulario de briefing y la página de referencia
@@ -118,6 +141,13 @@ Eventos que la página envía al `dataLayer` (todos incluyen `landing_version`, 
 | `cta_click` | Clic en un botón que lleva al formulario | `cta_text`, `tema` |
 | `faq_open` | Abre una pregunta frecuente | `faq_question` |
 | `whatsapp_click` | Clic en WhatsApp | `tema`, `ubicacion` |
+| `selector_pick` | Elige una frase en «¿Te reconoces?» | `situacion` |
+| `prefill_form` | Un botón rellena el formulario (selector o autodiagnóstico) | `origen`, `momento` |
+| `quiz_complete`, `quiz_restart` | Termina o reinicia el autodiagnóstico (B) | `resultado` |
+| `detail_open` | Abre un «Cómo lo trabajamos», «Leer más» u otro desplegable | `detalle` |
+| `process_step`, `route_step_click` | Abre una etapa del proceso o la toca en la tarjeta «sendero» | `paso` |
+| `tab_view` | Cambia de pestaña | `pestana` |
+| `faq_filter`, `faq_search` | Filtra o busca en las preguntas frecuentes (B) | `categoria`, `texto` |
 
 Configuración sugerida en GTM:
 
