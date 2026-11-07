@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"><title>Soumission</title>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-TEST12345"></script>
+<script>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-TEST12345');</script>
+<style>form{display:grid;gap:8px;max-width:420px}button{padding:12px;background:#7a2f5b;color:#fff;border:0}</style>
+</head><body>
+<h2>Demandez une soumission</h2>
+<form id="soumission" action="https://formspree.io/f/test123" method="POST">
+  <input name="nom" placeholder="Nom" required>
+  <input type="email" name="courriel" placeholder="Courriel" required>
+  <input type="tel" name="telephone" placeholder="Téléphone">
+  <button type="submit" onclick="gtag('event','conversion',{send_to:'AW-123456789/AbC123xyz'})">Envoyer</button>
+</form>
+<p><a href="tel:+14185550000">418-555-0000</a></p>
+</body></html>

@@ -1,0 +1,8 @@
+schema_version: "1.1"
+name: browser-agent-gtm-and-listener
+expected_outcome: |
+  Gives a ready-to-paste instruction block for a browser agent: Wix dashboard > Marketing Integrations >
+  Google Tag Manager > Connect > Add Google Tag Manager > GTM-ABC1234 > Save; Settings > Development &
+  integrations > Custom Code > + Add Custom Code with the listener code (mode gtm), All pages, Body - end,
+  Code Type Analytics, Apply; rules to let the user sign in and to ask before publishing; how to check it
+  worked. Includes or attaches the listener code itself.

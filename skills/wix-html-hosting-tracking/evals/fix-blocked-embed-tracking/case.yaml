@@ -1,0 +1,10 @@
+schema_version: "1.1"
+name: fix-blocked-embed-tracking
+expected_outcome: |
+  Explains that the Wix embed is an iframe on filesusr.com so tags inside it cannot use the page's cookies,
+  gclid or URL. Produces a cleaned embed snippet (old gtag removed, html-tracker in bridge mode) and a Custom
+  Code listener configured for gtag with the Google Ads conversion AW-123456789/AbC123xyz worth 25 CAD, plus
+  clear paste-where instructions (Custom Code, All pages, Body - end; the embed element; Google tag stays in
+  Marketing Integrations). Does not publish anything.
+context:
+  scaffold_script: place-files.sh

@@ -1,0 +1,11 @@
+schema_version: "1.1"
+name: host-several-landing-pages
+expected_outcome: |
+  Chooses Wix static hosting (route A). Prepares the three pages with prepare_site.py: GTM-K7Q2ZPW once per
+  page after Consent Mode defaults, html-tracker in direct mode, canonical/OG tags for
+  https://lp.mydomain-test.com, a sitemap.xml and robots.txt, the file with spaces renamed to a clean URL.
+  Explains the upload options (Wix MCP upload with the bundle, Wix CLI curl, or the drop page), that the
+  subdomain needs a Premium plan on that site, and not to also connect GTM in that site's Marketing
+  Integrations. Does not create or publish a site.
+context:
+  scaffold_script: place-files.sh

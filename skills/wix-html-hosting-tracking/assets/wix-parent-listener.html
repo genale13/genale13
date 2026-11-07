@@ -1,0 +1,197 @@
+<!--
+  html-tracker parent listener v1.0.0  (Route B: HTML inside a Wix "Embed HTML" iframe)
+
+  Paste this whole block ONCE in the Wix dashboard:
+    Settings > Development & integrations > Custom Code > + Add Custom Code
+      - Add Code to Pages: All pages (load code on each new page)
+      - Place Code in: Body - end
+      - Code Type: Analytics
+  Requires: Google Tag OR Google Tag Manager connected in Marketing Integrations (not both).
+
+  What it does: receives the events that html-tracker posts from inside your embedded HTML
+  (iframe on *.filesusr.com) and sends them from THIS page, so they carry the page's first-party
+  cookies, gclid and real page URL. It also sends gclid / UTM values down to the iframe so
+  hidden form fields can store them.
+-->
+<script>
+(function (w, d) {
+  'use strict';
+  if (w.__htmlTrackerListener) return;
+  w.__htmlTrackerListener = true;
+
+  var CONFIG = /*__CONFIG_START__*/{
+    // 'auto' picks GTM when a GTM-XXXX container is loaded, otherwise the Google tag (gtag).
+    mode: 'auto',
+    // Extra iframe origins to accept, e.g. a page you host yourself and show with "Embed a site":
+    allowedOrigins: [],
+    // Accept any Wix embed origin (https://<anything>.filesusr.com). Set false to accept only
+    // this site's own embed host (www-example-com.filesusr.com) plus allowedOrigins.
+    allowAnyFilesusr: true,
+    // gtag mode only: event name -> Google Ads conversion. The AW- ID must be a destination of the
+    // Google tag connected in Wix Marketing Integrations.
+    // e.g. generate_lead: { send_to: 'AW-123456789/AbCdEfGhIj', value: 0, currency: 'CAD' }
+    conversions: {},
+    debug: false
+  }/*__CONFIG_END__*/;
+
+  var NS = 'wixhtml';
+  var FILESUSR = /^https:\/\/[a-z0-9-]+\.filesusr\.com$/i;
+  var KNOWN = ['embed_id', 'embed_title', 'embed_view', 'click_text', 'click_url', 'click_id', 'click_classes',
+    'click_element', 'section', 'link_url', 'link_domain', 'link_text', 'contact_method', 'file_name',
+    'file_extension', 'percent_scrolled', 'engaged_seconds', 'form_id', 'form_name', 'form_destination',
+    'form_length', 'last_field', 'lead_source', 'value', 'currency', 'transaction_id', 'video_title',
+    'video_provider', 'video_percent', 'video_duration', 'media_type', 'element_name', 'copy_type',
+    'copy_length', 'error_message', 'error_source', 'event_source', 'user_data'];
+  var ATTR_KEYS = ['gclid', 'gbraid', 'wbraid', 'dclid', 'fbclid', 'msclkid', 'utm_source', 'utm_medium',
+    'utm_campaign', 'utm_term', 'utm_content', 'utm_id'];
+  var dl = (w.dataLayer = w.dataLayer || []);
+  function gtag() { dl.push(arguments); }
+  function dbg() { if (CONFIG.debug && w.console) try { console.log.apply(console, ['[html-tracker listener]'].concat([].slice.call(arguments))); } catch (e) {} }
+  function clip(s, n) { s = s == null ? '' : String(s); return s.length > n ? s.slice(0, n) : s; }
+
+  /* ------------------------------------------------------------ who may talk */
+  function ownEmbedOrigin() { return 'https://' + location.hostname.replace(/\./g, '-') + '.filesusr.com'; }
+  function originOk(o) {
+    if (CONFIG.allowedOrigins.indexOf(o) > -1) return true;
+    if (o === ownEmbedOrigin()) return true;
+    return CONFIG.allowAnyFilesusr && FILESUSR.test(o);
+  }
+
+  /* ----------------------------------------------- attribution for the iframe */
+  function parseQuery(search) {
+    var out = {};
+    String(search || '').replace(/^\?/, '').split('&').forEach(function (pair) {
+      if (!pair) return;
+      var i = pair.indexOf('=');
+      var k, v;
+      try { k = decodeURIComponent(i < 0 ? pair : pair.slice(0, i)).toLowerCase(); v = i < 0 ? '' : decodeURIComponent(pair.slice(i + 1).replace(/\+/g, ' ')); } catch (e) { return; }
+      if (k && !(k in out)) out[k] = v;
+    });
+    return out;
+  }
+  function gclCookie(name) {
+    var m = d.cookie.match(new RegExp('(?:^|;\\s*)' + name + '=([^;]+)'));
+    if (!m) return '';
+    var parts = decodeURIComponent(m[1]).split('.');
+    return parts.length > 2 ? parts.slice(2).join('.') : '';
+  }
+  function refOrigin() {
+    try { var u = new URL(d.referrer); return u.origin !== location.origin ? u.origin : ''; } catch (e) { return ''; }
+  }
+  // UTMs (campaign labels, not identifiers) are remembered for the session so a form on a later
+  // page still knows the campaign. gclid/gbraid come only from the URL or Google's own cookies,
+  // which Google sets only when ad storage is allowed.
+  var q = parseQuery(location.search), attrib = {};
+  try { attrib = JSON.parse(w.sessionStorage.getItem('wixhtml_attrib') || '{}') || {}; } catch (e) {}
+  var hasUtm = ATTR_KEYS.some(function (k) { return /^utm_/.test(k) && q[k]; });
+  if (hasUtm) {
+    attrib = { landing_page: location.pathname, referrer_url: refOrigin() };
+    ATTR_KEYS.forEach(function (k) { if (/^utm_/.test(k) && q[k]) attrib[k] = clip(q[k], 300); });
+    try { w.sessionStorage.setItem('wixhtml_attrib', JSON.stringify(attrib)); } catch (e) {}
+  }
+  function context() {
+    var c = {
+      page_url: location.origin + location.pathname,
+      page_path: location.pathname,
+      page_title: clip(d.title, 100),
+      landing_page: attrib.landing_page || location.pathname,
+      referrer_url: attrib.referrer_url || refOrigin()
+    };
+    var now = parseQuery(location.search); // Wix navigates client-side, so re-read the current URL
+    ATTR_KEYS.forEach(function (k) { var v = now[k] || q[k] || attrib[k]; if (v) c[k] = clip(v, 300); });
+    if (!c.gclid) { var g = gclCookie('_gcl_aw'); if (g) c.gclid = g; }
+    if (!c.gbraid) { var gb = gclCookie('_gcl_gb'); if (gb) c.gbraid = gb; }
+    return c;
+  }
+
+  /* ------------------------------------------------------------- forwarding */
+  function containerKeys() { var g = w.google_tag_manager, out = []; if (g) for (var k in g) out.push(k); return out; }
+  function resolveMode() {
+    if (CONFIG.mode === 'gtm' || CONFIG.mode === 'gtag') return CONFIG.mode;
+    var keys = containerKeys();
+    if (keys.some(function (k) { return /^GTM-/.test(k); })) return 'gtm';
+    if (keys.some(function (k) { return /^(G|AW|GT|DC)-/.test(k); }) || typeof w.gtag === 'function') return 'gtag';
+    return null; // nothing loaded yet (e.g. waiting for cookie consent)
+  }
+  var waiting = [], timer = null;
+  function dispatch(name, p, ud) {
+    var mode = resolveMode();
+    if (mode) { send(mode, name, p, ud); return; }
+    waiting.push([name, p, ud]);
+    if (timer) return;
+    var tries = 0;
+    timer = setInterval(function () {
+      var m = resolveMode();
+      if (!m && ++tries < 240) return; // wait up to 2 minutes, then drop (no tag = no consent/no tracking)
+      clearInterval(timer); timer = null;
+      var batch = waiting.splice(0);
+      if (m) batch.forEach(function (x) { send(m, x[0], x[1], x[2]); });
+      else dbg('no Google tag or GTM loaded; dropped', batch.length, 'events');
+    }, 500);
+  }
+  function send(mode, name, p, ud) {
+    if (mode === 'gtm') {
+      var o = {};
+      KNOWN.forEach(function (k) { o[k] = undefined; }); // clear values left by earlier events
+      for (var k in p) o[k] = p[k];
+      if (ud) o.user_data = ud;
+      o.event = name;
+      dl.push(o);
+    } else {
+      if (ud) gtag('set', 'user_data', ud);
+      gtag('event', name, p);
+      var conv = CONFIG.conversions[name];
+      if (conv) [].concat(conv).forEach(function (c) {
+        if (typeof c === 'string') c = { send_to: c };
+        if (!c || !c.send_to) return;
+        var cp = { send_to: c.send_to };
+        var v = p.value != null ? p.value : c.value;
+        if (v != null && v !== '' && !isNaN(+v)) { cp.value = +v; cp.currency = p.currency || c.currency || 'USD'; }
+        if (p.transaction_id) cp.transaction_id = p.transaction_id;
+        gtag('event', 'conversion', cp);
+      });
+    }
+    dbg(mode, name, p);
+  }
+  function sanitize(src) {
+    var out = {}, n = 0;
+    if (!src || typeof src !== 'object') return out;
+    for (var k in src) {
+      if (!Object.prototype.hasOwnProperty.call(src, k)) continue;
+      var key = String(k).toLowerCase().replace(/[^a-z0-9_]/g, '_').slice(0, 40);
+      var v = src[k];
+      if (!/^[a-z]/.test(key) || v == null || v === '' || typeof v === 'object') continue;
+      if (typeof v === 'number' && !isFinite(v)) continue;
+      out[key] = typeof v === 'number' ? v : clip(String(v), 100);
+      if (++n >= 24) break;
+    }
+    return out;
+  }
+  function cleanUserData(ud) {
+    if (!ud || typeof ud !== 'object') return null;
+    var out = {};
+    if (/^[a-f0-9]{64}$/.test(ud.sha256_email_address || '')) out.sha256_email_address = ud.sha256_email_address;
+    if (/^[a-f0-9]{64}$/.test(ud.sha256_phone_number || '')) out.sha256_phone_number = ud.sha256_phone_number;
+    return out.sha256_email_address || out.sha256_phone_number ? out : null;
+  }
+
+  var count = 0;
+  w.addEventListener('message', function (e) {
+    var m = e.data;
+    if (!m || typeof m !== 'object' || m.ns !== NS) return;
+    if (!originOk(e.origin)) { dbg('ignored message from', e.origin); return; }
+    if (m.type === 'hello') {
+      try { e.source.postMessage({ ns: NS, v: 1, type: 'context', context: context() }, e.origin); } catch (x) {}
+      return;
+    }
+    if (m.type !== 'event' || ++count > 500) return;
+    var name = String(m.name || '');
+    if (!/^[a-zA-Z][a-zA-Z0-9_]{0,39}$/.test(name)) return;
+    var p = sanitize(m.params);
+    p.embed_id = clip(m.embedId || p.embed_id || 'html_embed', 100);
+    p.event_source = 'html_embed';
+    dispatch(name, p, cleanUserData(m.userData));
+  });
+  dbg('ready; own embed origin =', ownEmbedOrigin());
+})(window, document);
+</script>
