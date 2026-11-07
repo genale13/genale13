@@ -37,7 +37,7 @@ function hitInfo(req) {
   if (/\/g\/collect/.test(u.pathname)) {
     collect(u.search);
     const body = req.postData() || '';
-    body.split('\n').forEach((line) => line && collect(line));
+    body.split(/\r?\n/).forEach((line) => line && collect(line));
   } else if (/pagead|conversion|ccm/.test(u.pathname)) {
     out.events.push('ads:' + u.pathname.split('/').slice(0, 4).join('/'));
   }
