@@ -148,20 +148,21 @@ def seo_markup(body_html):
 
 
 def seo_settings_md(an, json_ld):
-    meta, canon = an.meta, an.canonical or ''
+    meta, canon = an.meta, (an.canonical or '').rstrip('/')
     slug = urlparse(canon).path.strip('/').split('/')[-1] if canon else ''
+    cell = lambda v: str(v).replace('|', '\\|')
     lines = ['# Wix page settings for this custom element', '',
              'Wix renders the page <head>, so set these on the Wix page (Pages > the page > SEO Basics / Advanced SEO / '
              'Social Share), or with the Wix MCP SEO tags recipe once the page exists.', '',
              '| Setting | Value |', '|---|---|',
              '| Page URL slug | `%s` |' % (slug or '(choose one)'),
-             '| SEO title | %s |' % (an.title or '(write one)'),
-             '| Meta description | %s |' % (meta.get('description') or '(write one)'),
-             '| Robots | %s |' % (meta.get('robots') or 'index, follow'),
-             '| Canonical | %s |' % (canon or 'Wix default (the page URL)'),
-             '| Social title (og:title) | %s |' % (meta.get('og:title') or an.title or ''),
-             '| Social description | %s |' % (meta.get('og:description') or meta.get('description') or ''),
-             '| Social image (og:image) | %s |' % (meta.get('og:image') or '(choose one)'), '']
+             '| SEO title | %s |' % cell(an.title or '(write one)'),
+             '| Meta description | %s |' % cell(meta.get('description') or '(write one)'),
+             '| Robots | %s |' % cell(meta.get('robots') or 'index, follow'),
+             '| Canonical | %s |' % ('leave the Wix default, which is %s' % canon if canon else 'Wix default (the page URL)'),
+             '| Social title (og:title) | %s |' % cell(meta.get('og:title') or an.title or ''),
+             '| Social description | %s |' % cell(meta.get('og:description') or meta.get('description') or ''),
+             '| Social image (og:image) | %s |' % cell(meta.get('og:image') or '(choose one)'), '']
     if json_ld:
         lines += ['## Structured data', '',
                   'Advanced SEO > Structured Data Markup: add the JSON-LD from `structured-data.json`. The element also injects '
@@ -230,6 +231,10 @@ def prepare_element(ps, args, files, base_dir, out, gtag_ids, report, warn):
     own_lead, relay_key = ps.page_own_events(text)
     an = ps.analyze(text)
     ps.form_and_privacy_checks(an, pw, args.enhanced_conversions, 'element', text)
+    cpath = urlparse(an.canonical or '').path
+    if cpath not in ('', '/') and cpath.endswith('/'):
+        pw('the canonical URL ends with "/": Wix serves pages without it (/slug/ redirects 301 to /slug); use %s in the '
+           'canonical, og:url, hreflang and JSON-LD' % an.canonical.rstrip('/'))
     if re.search(r'\{\{[A-Z_]+\}\}', text):
         pw('unfilled placeholders: %s' % ', '.join(sorted(set(re.findall(r'\{\{[A-Z_]+\}\}', text)))))
 

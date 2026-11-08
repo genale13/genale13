@@ -57,7 +57,7 @@
     },
     {
       "@type": "Service",
-      "@id": "https://www.coaching-ukuu.com/coaching-profesional-online/#alinea-pro",
+      "@id": "https://www.coaching-ukuu.com/coaching-profesional-online#alinea-pro",
       "name": "ALINEA PRO®",
       "serviceType": "Coaching profesional online",
       "description": "Proceso individual de coaching que integra autoconocimiento, liderazgo personal, fortalezas, estructura y acción medible para tomar decisiones y avanzar en la siguiente etapa profesional.",
@@ -88,19 +88,19 @@
       ],
       "availableChannel": {
         "@type": "ServiceChannel",
-        "serviceUrl": "https://www.coaching-ukuu.com/coaching-profesional-online/",
+        "serviceUrl": "https://www.coaching-ukuu.com/coaching-profesional-online",
         "availableLanguage": "es"
       }
     },
     {
       "@type": "WebPage",
-      "@id": "https://www.coaching-ukuu.com/coaching-profesional-online/#webpage",
-      "url": "https://www.coaching-ukuu.com/coaching-profesional-online/",
+      "@id": "https://www.coaching-ukuu.com/coaching-profesional-online#webpage",
+      "url": "https://www.coaching-ukuu.com/coaching-profesional-online",
       "name": "Coaching profesional online y reorientación profesional | UKUU",
       "description": "Coaching profesional online y reorientación profesional en español: recupera la confianza y decide tu siguiente etapa con un plan. Primera sesión gratis.",
       "inLanguage": "es",
       "about": {
-        "@id": "https://www.coaching-ukuu.com/coaching-profesional-online/#alinea-pro"
+        "@id": "https://www.coaching-ukuu.com/coaching-profesional-online#alinea-pro"
       },
       "isPartOf": {
         "@id": "https://www.coaching-ukuu.com/#organizacion"
@@ -108,7 +108,7 @@
     },
     {
       "@type": "FAQPage",
-      "@id": "https://www.coaching-ukuu.com/coaching-profesional-online/#preguntas",
+      "@id": "https://www.coaching-ukuu.com/coaching-profesional-online#preguntas",
       "mainEntity": [
         {
           "@type": "Question",
