@@ -1,0 +1,252 @@
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "ProfessionalService",
+      "@id": "https://www.coaching-ukuu.com/#organizacion",
+      "name": "UKUU Coaching",
+      "url": "https://www.coaching-ukuu.com/",
+      "description": "Coaching profesional online en español para profesionales con experiencia que quieren decidir y liderar su siguiente etapa.",
+      "areaServed": [
+        {
+          "@type": "Country",
+          "name": "España"
+        },
+        {
+          "@type": "Country",
+          "name": "México"
+        },
+        {
+          "@type": "Country",
+          "name": "Chile"
+        },
+        {
+          "@type": "Country",
+          "name": "Colombia"
+        },
+        {
+          "@type": "Country",
+          "name": "Estados Unidos"
+        }
+      ],
+      "availableLanguage": "es",
+      "founder": {
+        "@id": "https://www.coaching-ukuu.com/#beatriz-teran"
+      }
+    },
+    {
+      "@type": "Person",
+      "@id": "https://www.coaching-ukuu.com/#beatriz-teran",
+      "name": "Beatriz Terán",
+      "jobTitle": "Coach profesional",
+      "worksFor": {
+        "@id": "https://www.coaching-ukuu.com/#organizacion"
+      },
+      "knowsLanguage": "es",
+      "hasCredential": {
+        "@type": "EducationalOccupationalCredential",
+        "name": "ICF Associate Certified Coach (ACC)",
+        "credentialCategory": "Certificación profesional",
+        "recognizedBy": {
+          "@type": "Organization",
+          "name": "International Coaching Federation",
+          "url": "https://coachingfederation.org/"
+        }
+      },
+      "image": "https://static.wixstatic.com/media/57848e_e704312b9278452986528d9863529e97~mv2.jpeg/v1/fill/w_640,h_800,q_82,enc_auto/57848e_e704312b9278452986528d9863529e97~mv2.jpeg"
+    },
+    {
+      "@type": "Service",
+      "@id": "https://www.coaching-ukuu.com/coaching-profesional-online/#alinea-pro",
+      "name": "ALINEA PRO®",
+      "serviceType": "Coaching profesional online",
+      "description": "Proceso individual de coaching que integra autoconocimiento, liderazgo personal, fortalezas, estructura y acción medible para tomar decisiones y avanzar en la siguiente etapa profesional.",
+      "provider": {
+        "@id": "https://www.coaching-ukuu.com/#organizacion"
+      },
+      "areaServed": [
+        {
+          "@type": "Country",
+          "name": "España"
+        },
+        {
+          "@type": "Country",
+          "name": "México"
+        },
+        {
+          "@type": "Country",
+          "name": "Chile"
+        },
+        {
+          "@type": "Country",
+          "name": "Colombia"
+        },
+        {
+          "@type": "Country",
+          "name": "Estados Unidos"
+        }
+      ],
+      "availableChannel": {
+        "@type": "ServiceChannel",
+        "serviceUrl": "https://www.coaching-ukuu.com/coaching-profesional-online/",
+        "availableLanguage": "es"
+      }
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://www.coaching-ukuu.com/coaching-profesional-online/#webpage",
+      "url": "https://www.coaching-ukuu.com/coaching-profesional-online/",
+      "name": "Coaching profesional online y reorientación profesional | UKUU",
+      "description": "Coaching profesional online y reorientación profesional en español: recupera la confianza y decide tu siguiente etapa con un plan. Primera sesión gratis.",
+      "inLanguage": "es",
+      "about": {
+        "@id": "https://www.coaching-ukuu.com/coaching-profesional-online/#alinea-pro"
+      },
+      "isPartOf": {
+        "@id": "https://www.coaching-ukuu.com/#organizacion"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://www.coaching-ukuu.com/coaching-profesional-online/#preguntas",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "¿Qué pasa en la sesión de exploración? ¿Tiene costo?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Es una conversación individual de 45 minutos por Google Meet, gratuita y sin compromiso. Revisamos tu momento profesional, lo que quieres cambiar y si ALINEA PRO® encaja contigo. Si no es el proceso adecuado para ti, te lo diré."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Cuánto cuesta un proceso de coaching de carrera?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "La inversión depende del formato y de la duración que necesites. Te la explico con transparencia en la sesión de exploración, cuando ya conozco tu situación y tus objetivos. Esa primera sesión es gratuita."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Cuántas sesiones necesito?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Depende de tu objetivo y de tu punto de partida. Lo definimos en la sesión de exploración y lo revisamos durante el proceso. Cada sesión dura 45 minutos y la frecuencia se adapta a tu agenda."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Cómo funciona el coaching profesional online?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Las sesiones son individuales, de 45 minutos, por videollamada en Google Meet. Solo necesitas una conexión estable y un espacio tranquilo. La frecuencia es flexible y la acordamos según tu agenda. El formato online permite trabajar con la misma profundidad y te ahorra desplazamientos. Entre sesiones avanzas con ejercicios, un cuaderno de trabajo y tu plan de acción."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Puedo hacerlo desde cualquier país? ¿Cómo funcionan los horarios?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Sí. El proceso es 100 % online y en español, así que puedes hacerlo desde España, Latinoamérica, Estados Unidos o cualquier otro país. El calendario de reserva te muestra los horarios disponibles en tu zona horaria."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Tengo que dejar mi trabajo para empezar el proceso?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Puedes hacer el proceso mientras sigues en tu trabajo actual. El objetivo es que decidas con criterio y a tu ritmo, sin prisas. A veces la conclusión es cambiar de empresa o de profesión; otras, replantear tu rol actual."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Y si todavía no sé qué quiero?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Es un punto de partida habitual. La primera etapa de ALINEA PRO® consiste precisamente en reconocer dónde estás y qué es importante para ti ahora. No necesitas llegar con la respuesta: la construimos paso a paso durante el proceso."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Cómo sé si debo cambiar de trabajo o de profesión?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Hay señales que conviene escuchar: sientes que podrías aportar más, algo ya no encaja con quien eres hoy o llevas tiempo aplazando una decisión. Antes de cambiar, ayuda distinguir si el malestar tiene que ver con el puesto, con la empresa o con la profesión. En el proceso lo analizamos con criterios concretos para que decidas con información y no por cansancio."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Es tarde para cambiar de carrera a los 40 o a los 50?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No hay una edad límite para replantear tu carrera. A los 40 o a los 50 cuentas con algo que al principio no tenías: experiencia, criterio y capacidades demostradas. No necesitas empezar de cero: se trata de decidir cómo poner en acción lo que ya tienes en tu siguiente etapa profesional."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Cómo cambiar de trabajo sin empezar de cero?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Partiendo de lo que ya tienes. Identificamos tus capacidades, fortalezas y logros, y vemos cómo llevarlos a la etapa que quieres construir. Así diseñas un cambio realista, con un plan por pasos, en lugar de un salto al vacío."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Me da miedo cambiar de carrera, ¿es normal? ¿Cómo se trabaja?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Sí, es normal sentir dudas ante una decisión importante. En el proceso trabajamos para que esa sensación no decida por ti: aclaramos opciones, evaluamos riesgos y avanzamos con pasos concretos que puedes sostener."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Cómo salir del estancamiento profesional?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "El estancamiento profesional suele aparecer cuando tu trabajo funciona pero ya no te satisface. Para salir de él, primero conviene entender qué lo provoca y qué quieres en su lugar; después, convertir esa respuesta en decisiones y acciones medibles. Es el recorrido que hacemos en ALINEA PRO®."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Qué es la reorientación profesional y en qué se diferencia del coaching de carrera?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "La reorientación profesional es el proceso de replantear hacia dónde quieres llevar tu carrera, normalmente a partir de la experiencia que ya tienes. El coaching de carrera es una forma de acompañar ese proceso: no te digo qué camino elegir; te ayudo a reconocer tus opciones, decidir y avanzar con un plan."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Cómo identificar mis fortalezas profesionales?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Tus fortalezas suelen aparecer en lo que haces bien con naturalidad, en lo que otras personas te reconocen y en los logros que más valoras. En ALINEA PRO® las identificamos con herramientas propias de autoconocimiento y con el análisis de tu trayectoria, para usarlas como base de tus decisiones."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Cómo encontrar mi propósito profesional?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "El propósito profesional rara vez aparece de golpe: se construye al conectar tus valores, tus fortalezas y el impacto que quieres tener. En el proceso lo trabajamos de forma práctica, para que se traduzca en criterios de decisión y en pasos concretos."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Ya intenté resolverlo por mi cuenta. ¿Qué cambia con un proceso de coaching?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Pensar en ello a solas suele llevar a dar vueltas a las mismas ideas. Un proceso acompañado aporta una mirada externa, estructura y seguimiento: cada sesión termina con acuerdos concretos y revisamos tus avances en la siguiente. Esa combinación es la que convierte la reflexión en decisiones."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿En qué se diferencia el coaching de la terapia psicológica?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "El coaching se centra en el presente y en el futuro: objetivos, decisiones y acciones. No trata problemas de salud mental ni sustituye la atención psicológica, psiquiátrica o médica. Si en la sesión de exploración veo que necesitas otro tipo de acompañamiento, te lo diré y te recomendaré acudir a un profesional de la salud."
+          }
+        }
+      ]
+    }
+  ]
+}

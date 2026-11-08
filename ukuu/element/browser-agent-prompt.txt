@@ -1,0 +1,24 @@
+TASK FOR A BROWSER AGENT: add a custom-element page to the Wix site "Ukuu Coaching".
+
+RULES
+- The user signs in; never type passwords or 2FA codes. Ask before publishing, buying or deleting anything.
+- Paste values exactly (paste, never type key by key). Change nothing else. The editor may be in another language.
+- Stop and report if the site is on a Free plan, has no connected domain, or shows Wix ads: custom elements need
+  a Premium plan, a connected domain and no ads.
+
+STEP 1 - Open the editor. Pages & Menu -> + Add Page -> blank page named "Coaching profesional online y reorientación profesional | UKUU".
+  Page SEO (SEO Basics): URL slug "coaching-profesional-online"; title and meta description from seo-settings.md.
+STEP 2 - On that page: Add Elements -> Embed Code -> Custom Element -> Choose Source -> Server URL:
+  <https URL of ukuu-coaching-profesional.js>
+  Tag Name: ukuu-coaching-profesional
+STEP 3 - Stretch the element to full width and place it right under the header. Remove other placeholder
+  elements on the page. Do not force a small fixed height: the element grows with its content.
+STEP 4 - (Optional, with Dev Mode on) Properties: element ID customElement1; paste velo-seo-markup.js into the
+  page code panel.
+STEP 5 - Preview: the content and styles must appear. Do NOT publish; tell the user it is ready to publish.
+
+REPORT FORMAT
+- Page created (name, slug): ...
+- Custom element source / tag: ...
+- Preview OK?: ...
+- Needs the user: ...

@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """Prepare HTML for Wix with full Google Ads / GA4 / GTM tracking and SEO basics.
 
-Two routes:
-  static  The HTML becomes its own Wix-hosted static site (first-party pages, best tracking/SEO).
+Routes:
+  static   The HTML becomes its own Wix-hosted static site (first-party pages, best tracking/SEO).
           Injects consent defaults + GTM or Google tag + html-tracker (direct mode), fixes SEO
           basics, writes sitemap.xml / robots.txt and the upload artifacts for Wix.
   embed   The HTML is pasted into a Wix "Embed HTML" element (an iframe on *.filesusr.com).
           Produces a self-contained snippet with html-tracker in bridge mode (existing Google
           tags removed) plus the configured parent listener for Wix Custom Code.
+  listener Only the Wix-side listener + a paste-ready browser-agent prompt (embeds already prepared).
+  element  One page becomes a Wix custom element: rendered inside a Wix page with no iframe, CSS scoped,
+           scripts run in page scope, html-tracker scoped to the element (needs Premium + domain + no ads).
 
 Standard library only. Run with -h for options. Examples:
   python3 prepare_site.py ./landing --route static --gtm GTM-ABC1234 --base-url https://lp.example.com
@@ -154,18 +157,19 @@ def analyze(text):
     return an
 
 
-def form_and_privacy_checks(an, pw, enhanced, route):
+def form_and_privacy_checks(an, pw, enhanced, route, text=''):
     """Warn about lead forms that lose the lead or leak contact data, and a missing privacy link."""
     lead_forms = [f for f in an.forms if f['contact']]
+    js_submit = bool(re.search(r'''addEventListener\(\s*["']submit["']''', text) and 'preventDefault' in text)
+    where = {'static': 'the page', 'embed': 'the iframe', 'element': 'the Wix page'}.get(route, 'the page')
     for f in lead_forms:
         action = (f['action'] or '').strip()
-        if not action or action == '#' or action.lower().startswith('javascript:'):
-            pw('form "%s" has no action: a normal submit reloads %s with the answers in the URL, so the lead is lost '
-               'and the email lands in page URLs sent to GA4. Post it to a form backend (CRM, HubSpot, Formspree...) '
-               'with method="post", or submit it with JavaScript and call htmlTracker.lead() on success%s'
-               % (f['id'], 'the page' if route == 'static' else 'the iframe',
-                  '' if route == 'embed' else ' (static hosting cannot receive form posts)'))
-        elif f['method'] != 'post':
+        if (not action or action == '#' or action.lower().startswith('javascript:')) and not js_submit:
+            pw('form "%s" has no action and no script handles its submit: a normal submit reloads %s with the answers '
+               'in the URL, so the lead is lost and the email lands in page URLs sent to GA4. Post it to a form backend '
+               '(CRM, HubSpot, Formspree...) with method="post", or submit it with JavaScript and call htmlTracker.lead() '
+               'on success%s' % (f['id'], where, ' (static hosting cannot receive form posts)' if route == 'static' else ''))
+        elif f['method'] != 'post' and action and action != '#' and not js_submit:
             pw('form "%s" uses GET: the email/phone typed by the visitor goes into the destination URL; use method="post"' % f['id'])
     privacy = re.compile(r'privacy|privacidad|privacit|confidentialit|politique|datenschutz|aviso legal|terms', re.I)
     if (lead_forms or enhanced) and not any(privacy.search((h or '') + ' ' + t) for h, t in an.anchors):
@@ -174,8 +178,11 @@ def form_and_privacy_checks(an, pw, enhanced, route):
 
 
 # ------------------------------------------------------------------ google tag removal
-GTM_INLINE = re.compile(r'(?:<!--\s*Google Tag Manager\s*-->\s*)?<script\b[^>]*>(?:(?!</script>).)*?googletagmanager\.com/gtm\.js'
-                        r'(?:(?!</script>).)*?</script>(?:\s*<!--\s*End Google Tag Manager\s*-->)?', re.I | re.S)
+GTM_INLINE = re.compile(r'(?:<!--\s*Google Tag Manager\s*-->\s*)?<script\b[^>]*>\s*(?:<!--)?\s*\(function\s*\(\s*w\s*,\s*d\s*,\s*s\s*,\s*l\s*,\s*i\s*\)'
+                        r'\s*\{(?:(?!</script>).){0,600}?googletagmanager\.com/gtm\.js(?:(?!</script>).){0,400}?\}\s*\)\s*\(\s*window\s*,\s*document\s*,'
+                        r'\s*[\'"]script[\'"]\s*,\s*[\'"]\w+[\'"]\s*,\s*[\'"]GTM-[A-Z0-9]+[\'"]\s*\)\s*;?\s*(?:-->)?\s*</script>'
+                        r'(?:\s*<!--\s*End Google Tag Manager\s*-->)?', re.I | re.S)
+OWN_GTM_LOADER = re.compile(r'googletagmanager\.com/gtm\.js', re.I)
 GTM_NOSCRIPT = re.compile(r'(?:<!--\s*Google Tag Manager \(noscript\)\s*-->\s*)?<noscript>\s*<iframe[^>]*googletagmanager\.com/ns\.html'
                           r'[^>]*>\s*</iframe>\s*</noscript>(?:\s*<!--\s*End Google Tag Manager \(noscript\)\s*-->)?', re.I | re.S)
 GTAG_LOADER = re.compile(r'(?:<!--\s*Global site tag[^>]*-->\s*|<!--\s*Google tag \(gtag\.js\)\s*-->\s*)?'
@@ -242,6 +249,8 @@ def strip_google_tags(text):
     text = INLINE_SCRIPT.sub(inline, text)
     leftovers = [m.group(0)[:80] for m in INLINE_SCRIPT.finditer(text)
                  if re.search(r"gtag\(\s*['\"](config|event)", m.group(2))]
+    if any(OWN_GTM_LOADER.search(m.group(2)) for m in INLINE_SCRIPT.finditer(text)):
+        leftovers.append('a page script loads GTM itself (gtm.js); keep its GTM ID empty so GTM is not loaded twice')
     return text, removed, ids, leftovers
 
 
@@ -265,6 +274,14 @@ def strip_inline_tracking_handlers(text):
         mixed.append(m.group(0).strip())
         return m.group(0)
     return INLINE_HANDLER.sub(fix, text), stripped, mixed
+
+
+def page_own_events(text):
+    """What the page's own scripts already send: (sends_generate_lead, relay_filter_key)."""
+    code = ' '.join(m.group(2) for m in INLINE_SCRIPT.finditer(text) if 'ld+json' not in m.group(1).lower())
+    lead = bool(re.search(r"""['"]generate_lead['"]""", code))
+    key = re.search(r'\{\s*event\s*:\s*[A-Za-z_$][\w$.]*\s*,\s*([A-Za-z_][\w]*)\s*:', code)
+    return lead, (key.group(1) if key and 'dataLayer' in code else '')
 
 
 # ------------------------------------------------------------------------ snippets
@@ -525,8 +542,9 @@ def parse_conversions(items, currency):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('src', nargs='?', help='folder with the site, or a single .html file (not needed for --route listener)')
-    ap.add_argument('--route', choices=['static', 'embed', 'listener'], required=True,
-                    help='static = own Wix static site; embed = Embed HTML snippet + listener; listener = only the Wix-side listener and browser prompt')
+    ap.add_argument('--route', choices=['static', 'embed', 'listener', 'element'], required=True,
+                    help='static = own Wix static site; embed = Embed HTML snippet + listener; listener = only the Wix-side '
+                         'listener and browser prompt; element = Wix custom element rendering the page inside a Wix page (no iframe)')
     ap.add_argument('--out', help='output folder (default: <src>-wix-<route>)')
     g = ap.add_argument_group('Google tags')
     g.add_argument('--gtm', help='Google Tag Manager container ID, GTM-XXXXXXX (recommended)')
@@ -553,6 +571,9 @@ def main():
     t.add_argument('--site-name', help='embed/listener: Wix site name for the browser-agent prompt')
     t.add_argument('--site-id', help='embed/listener: Wix site ID (metaSiteId) for direct dashboard links in the prompt')
     t.add_argument('--velo', action='store_true', help='embed/listener: also write velo-page-code.js (use it INSTEAD of the listener)')
+    t.add_argument('--tag-name', help='element: custom element tag, lowercase with a hyphen (default html-<file name>)')
+    t.add_argument('--element-url', help='element: final https URL of the generated .js, used in the browser-agent prompt')
+    t.add_argument('--relay-filter', help="key that marks the page's own dataLayer events to relay (auto-detected when possible)")
     t.add_argument('--track-errors', action='store_true')
     t.add_argument('--debug', action='store_true')
     s = ap.add_argument_group('SEO (static route)')
@@ -607,6 +628,9 @@ def main():
 
     if args.route == 'static':
         prepare_static(args, files, base_dir, out, regions, gtag_ids, report, warn)
+    elif args.route == 'element':
+        import wix_element
+        wix_element.prepare_element(sys.modules[__name__], args, files, base_dir, out, gtag_ids, report, warn)
     else:
         prepare_embed(args, files, base_dir, out, gtag_ids, report, warn)
     finish(args, report, out)
@@ -758,7 +782,7 @@ def prepare_static(args, files, base_dir, out, regions, gtag_ids, report, warn):
             pw('meta description is only %d characters; aim for 140-160 with the offer and a call to action' % len(desc))
         elif len(desc) > 170:
             pw('meta description is %d characters; Google cuts it around 155-160' % len(desc))
-        form_and_privacy_checks(an, pw, args.enhanced_conversions, 'static')
+        form_and_privacy_checks(an, pw, args.enhanced_conversions, 'static', text)
         robots = an.meta.get('robots', '')
         is_noindex = 'noindex' in robots.lower()
         if is_noindex:
@@ -1036,7 +1060,7 @@ def prepare_embed(args, files, base_dir, out, gtag_ids, report, warn):
         if re.search(r'connect\.facebook\.net|fbq\(|analytics\.tiktok\.com|ttq\.', text):
             pw('other pixels (Meta/TikTok) inside the iframe have the same third-party problem; connect them in Wix '
                'Marketing Integrations instead and let the listener feed them (GTM) or use the Velo option')
-        form_and_privacy_checks(analyze(text), pw, args.enhanced_conversions, 'embed')
+        form_and_privacy_checks(analyze(text), pw, args.enhanced_conversions, 'embed', text)
         text, inlined, problems = inline_local_assets(text, f, base_dir, args.inline_binary_max_kb)
         if inlined:
             page['changes'].append('inlined %d local file(s) so the snippet works on filesusr.com' % inlined)

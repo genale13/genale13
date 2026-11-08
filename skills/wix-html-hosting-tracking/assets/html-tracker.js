@@ -32,6 +32,13 @@
   var CONVERSIONS = opt('conversions', {});
   var EC = !!opt('enhancedConversions', false);
   var ROOT_SEL = String(opt('root', '') || ''); // CSS selector: only track inside this element (custom elements, sections)
+  var AUTO_LEAD = opt('autoLead', true) !== false; // false when the page already sends its own generate_lead
+  // Relay the page's OWN dataLayer events (objects with an "event" key) to where they can be measured:
+  // bridge mode -> the Wix page; direct mode with output "gtag" -> gtag('event'). Off in direct+GTM mode
+  // (GTM reads dataLayer itself). relayFilter = a key the page puts on its own events (e.g. landing_version).
+  var RELAY = opt('relayDataLayer', MODE === 'bridge' || OUTPUT === 'gtag') && !(MODE === 'direct' && OUTPUT === 'gtm');
+  var RELAY_FILTER = String(opt('relayFilter', '') || '');
+  var RELAY_SKIP = /^(gtm\.|Pageview$|page_view$|html_tracker)/;
   var LOG = [];
   var sent = 0;
   var ctx = {};
@@ -503,7 +510,7 @@
     r.submitted = true; r.submittedAt = now;
     var p = formParams(r);
     track('form_submit', p);
-    if (!isLead(f)) return;
+    if (!AUTO_LEAD || !isLead(f)) return;
     var lp = assign({}, p, { lead_source: MODE === 'bridge' ? 'html_embed_form' : 'html_form' });
     var val = f.getAttribute('data-lead-value');
     if (val === null || val === '') val = opt('leadValue', null);
@@ -680,6 +687,45 @@
     track('js_error', { error_message: redact(clip(e.message || 'error', 100)), error_source: (src ? cleanUrl(src) : '') + ':' + (e.lineno || 0) });
   }
 
+  /* ------------------------------------------------- relay the page's own events */
+  var relayed = 0, relayArr = null;
+  function relayItem(o) {
+    if (!o || typeof o !== 'object' || Object.prototype.toString.call(o) === '[object Arguments]') return;
+    if (typeof o.event !== 'string' || RELAY_SKIP.test(o.event)) return;
+    if (RELAY_FILTER && !(RELAY_FILTER in o)) return;
+    if (MODE === 'direct' && o.event_source === 'html_page') return; // our own events
+    var params = {};
+    for (var k in o) {
+      if (!Object.prototype.hasOwnProperty.call(o, k) || k === 'event' || k === 'user_data' || /^gtm/.test(k)) continue;
+      var v = o[k];
+      if (v === null || typeof v === 'object' || typeof v === 'function') continue;
+      params[k] = v;
+    }
+    var raw = o.user_data && typeof o.user_data === 'object' ? o.user_data : null;
+    if (MODE === 'bridge') {
+      if (raw) hashUserData({ email: raw.email || raw.email_address, phone: raw.phone_number || raw.phone }, function (ud) { track(o.event, params, ud); });
+      else track(o.event, params);
+    } else { // direct + gtag: the Google tag ignores plain dataLayer objects, so turn them into gtag events
+      var dl = (w.dataLayer = w.dataLayer || []);
+      var g = typeof w.gtag === 'function' ? w.gtag : function () { dl.push(arguments); };
+      if (raw) g('set', 'user_data', raw);
+      var gp = sanitize(params);
+      gp.event_source = 'html_page';
+      if (EMBED_ID) gp.embed_id = EMBED_ID;
+      g('event', o.event, gp);
+      if (CONVERSIONS && CONVERSIONS[o.event]) fireConversions(g, CONVERSIONS[o.event], params);
+      LOG.push({ t: Date.now(), name: o.event, params: params, relayed: true });
+      if (LOG.length > 100) LOG.shift();
+    }
+  }
+  function relayScan() { // read new dataLayer entries (works whatever replaced dataLayer.push: GTM, gtag...)
+    var dl = w.dataLayer;
+    if (!dl || typeof dl.length !== 'number') return;
+    // A new array: replay its history only when it cannot contain other code's events (bridge iframe, or a filter key)
+    if (dl !== relayArr) { relayArr = dl; relayed = MODE === 'bridge' || RELAY_FILTER ? 0 : dl.length; }
+    for (; relayed < dl.length; relayed++) { try { relayItem(dl[relayed]); } catch (e) { dbg('relay error', e); } }
+  }
+
   /* --------------------------------------------------------------- public API */
   var api = {
     version: VERSION,
@@ -722,6 +768,12 @@
         delay = Math.min(delay * 1.6, 4000);
         setTimeout(ping, delay);
       })();
+    }
+    if (RELAY) {
+      w.dataLayer = w.dataLayer || [];
+      relayScan();
+      setInterval(relayScan, 300);
+      w.addEventListener('pagehide', relayScan);
     }
     setupScroll();
     setupEngagement();
