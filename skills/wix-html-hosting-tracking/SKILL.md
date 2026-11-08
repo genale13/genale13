@@ -1,6 +1,6 @@
 ---
 name: wix-html-hosting-tracking
-description: Host or embed HTML on Wix so Google Ads, GA4 and Google Tag Manager can track everything visitors do inside it, with SEO intact. Use whenever someone wants to upload, publish or host HTML files or landing pages on Wix (one page or several, "as if Wix were a server"), says tracking, conversions, GTM or GA4 do not work or are "blocked" inside a Wix HTML embed, iFrame or filesusr.com, wants clicks, forms, scroll or leads inside embedded code tracked, needs gclid/UTM passed into embedded forms, or asks for Google Ads conversion, enhanced conversion or consent setup for HTML on Wix, even if they never say iframe or skill. Also gives click-by-click browser steps (e.g. for Claude in Chrome) for the Wix editor, Wix dashboard, GTM, GA4 and Google Ads.
+description: Host or embed HTML on Wix so Google Ads, GA4 and Google Tag Manager can track everything visitors do inside it, with SEO intact. Use whenever someone wants to upload, publish or host HTML files or landing pages on Wix (one page or several, "as if Wix were a server"), says tracking, conversions, GTM or GA4 do not work or are "blocked" inside a Wix HTML embed, iFrame or filesusr.com, wants an HTML page inside an existing Wix page without an iframe (custom element), wants clicks, forms, scroll or leads inside embedded code tracked, needs gclid/UTM passed into embedded forms, or asks for Google Ads conversion, enhanced conversion or consent setup for HTML on Wix, even if they never say iframe or skill. Also gives click-by-click browser steps (e.g. for Claude in Chrome) for the Wix editor, Wix dashboard, GTM, GA4 and Google Ads.
 ---
 
 # Wix HTML hosting with full Google tracking and SEO
@@ -22,7 +22,7 @@ as real pages on Wix, Route A) or to bridge it (Route B). Details: `references/w
   from Wix's docs/recipes (`ReadFullDocsArticle`), never from memory. On a failed call, fix what the error
   says and quote its Wix request id.
 - **Scripts** (Python 3, standard library): `scripts/prepare_site.py`, `scripts/verify_live.py`.
-  Optional, Node + Playwright: `scripts/browser_check.js`, `scripts/simulate_embed.js`.
+  Optional, Node + Playwright: `scripts/browser_check.js`, `scripts/simulate_embed.js`, `scripts/simulate_element.js`.
 - **A browser agent or the user** for screens without an API (editor embeds, Custom Code, Marketing
   Integrations, GTM, GA4, Google Ads): `references/browser-runbook.md`, plus the ready-to-paste
   `browser-agent-prompt.txt` that `prepare_site.py` writes for Route B. No GTM, GA4 or Google Ads connector is
@@ -53,7 +53,7 @@ value too.
 | Landing pages for ads, campaigns or SEO; one or several pages; a subdomain like `lp.` is fine | **A — static hosting** (best tracking and SEO) |
 | The HTML must live inside an existing Wix page at that page's URL (form, calculator, quiz, widget) | **B1 — embed + bridge listener** |
 | Same as B1 but the site already uses Velo, or Meta/TikTok pixels must get the events too | **B2 — Velo page code** (`--velo`) |
-| Inside an existing page, no iframe at all, technical user, Premium + domain + no Wix ads | **B3 — custom element** (advanced) |
+| Inside the Wix site with **no iframe** (full page or section), Premium + domain + no Wix ads | **B3 — custom element** (`--route element`) |
 | Needs a Wix store, bookings, members, CMS or Wix Forms storing the leads | not this skill: `StartHeadlessBuild` |
 
 Default when the request is ambiguous: "upload/host/load several HTML pages" → **A**; "my HTML embed in
@@ -100,6 +100,13 @@ and the steps, and say that any upload (even the drop page) goes live at once on
    Code Type *Analytic*); paste each `.embed.html` into its Embed HTML element; ask, then publish the editor.
 5. Put the page's key text in native Wix text too; iframe text does not count for the page's SEO.
 
+**B3 — custom element (no iframe):** `python3 scripts/prepare_site.py <file.html> --route element --gtag G-…,AW-… --tag-name <brand-page> --site-name "<site>"` turns one page into `<tag>.js`: HTML in the light DOM, CSS scoped to the tag (`html`/`body` rules mapped to the element), scripts run in page scope, fonts and JSON-LD added to the page, html-tracker in direct mode scoped to the element; when Wix re-creates the element on a page change it reuses the
+rendered DOM, so page scripts run once per page load. It also writes `seo-settings.md`, `structured-data.json`, `velo-seo-markup.js` and `browser-agent-prompt.txt`. Host the `.js` on HTTPS (public GitHub repo → `https://cdn.jsdelivr.net/gh/<user>/<repo>@<commit-sha>/<path>`, pinned to a commit), re-run with `--element-url <that URL>` so the prompt has it. Check it first:
+`node scripts/simulate_element.js --element <tag>.js --site https://www.example.com --gtag G-…,AW-… --submit` (no FAIL).
+Then: new page (Layouts → *No Header & Footer* when the HTML has its own) → Add Elements → Embed Code → Custom
+Element → Server URL + Tag Name → stretch → SEO → ask, publish. No listener: the Wix page's own Google tag sees the
+events. Details: `route-b-editor-embed.md` §B3.
+
 ## Step 4 — Google side (details: `references/google-setup.md`)
 
 GA4: Form interactions off for Route A, custom dimensions, `generate_lead` as key event, data redaction on.
@@ -115,7 +122,10 @@ page-view setup on editor sites (Wix is a single-page app). Consent: defaults al
   `node scripts/browser_check.js "https://<host>/<page>?utm_source=qa&utm_medium=test" --submit` lists events,
   where the form would post and the Google hits (answered locally, not sent). A warning that a container sent
   no hits usually means an empty or unpublished GTM container.
-- Route B: `simulate_embed.js` before installing; after installing, `browser_check.js` on the Wix page (the
+- Route B3: `simulate_element.js` before installing (Wix styles unchanged, one `generate_lead`, Google hits without
+  personal data, a Wix page change and back without doubled events); check the CDN copy is byte-identical to the
+  tested file; after publishing, `browser_check.js` on the live page.
+- Route B1/B2: `simulate_embed.js` before installing; after installing, `browser_check.js` on the Wix page (the
   iframe must show `bridge` mode and the parent context) or, in the browser console,
   `Object.keys(window.google_tag_manager||{})` and `window.__htmlTrackerListener`. `verify_live.py` is for
   Route A only.
@@ -143,10 +153,12 @@ and the events they will now see. Mention every **check:** item you could not fi
 
 ## Files
 
-- `scripts/prepare_site.py` — `--route static` (Route A), `--route embed` (Route B), `--route listener` (Wix side only); `-h` for options.
+- `scripts/prepare_site.py` — `--route static` (Route A), `--route embed` (Route B1/B2), `--route element` (B3,
+  via `scripts/wix_element.py`), `--route listener` (Wix side only); `-h` for options.
 - `scripts/verify_live.py` — HTTP checks of a published Route A site (tags, consent order, SEO files, 404s).
 - `scripts/browser_check.js` — Playwright check of a live page: events, dataLayer, Google hits, `--submit` forms.
-- `scripts/simulate_embed.js` — Route B: simulated Wix page + embed, before installing anything.
+- `scripts/simulate_embed.js` — Route B1/B2: simulated Wix page + embed, before installing anything.
+- `scripts/simulate_element.js` — Route B3: simulated Wix page + custom element (CSS leaks, lead count, page changes).
 - `assets/html-tracker.js` — the tracker (direct and bridge modes). Options/events: `references/event-reference.md`.
 - `assets/wix-parent-listener.html` — Custom Code listener for Route B1 (prepare_site writes a configured copy).
 - `assets/velo-page-code.js` — Route B2 (written to the output only with `--velo`).

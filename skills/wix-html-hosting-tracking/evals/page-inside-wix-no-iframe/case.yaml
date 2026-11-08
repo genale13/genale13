@@ -1,0 +1,11 @@
+schema_version: "1.1"
+name: page-inside-wix-no-iframe
+expected_outcome: |
+  Chooses the custom element route (prepare_site.py --route element), not an Embed HTML iframe and not a separate
+  static site, because the user wants the page inside the existing Wix site without an iframe. Produces the element
+  .js with scoped CSS and html-tracker, removes the page's own Google tag (the Wix site already loads G-TEST12345 /
+  AW-123456789), explains hosting the .js on HTTPS and the editor steps (Custom Element, Server URL, Tag Name,
+  No Header & Footer layout, page SEO), checks it with simulate_element.js or says why it could not, and publishes
+  nothing.
+context:
+  scaffold_script: place-files.sh

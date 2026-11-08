@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spring flowers delivered today in Montreal | Test Florist</title>
+<meta name="description" content="Fresh spring bouquets delivered the same day in Montreal. Order before 2 pm and get free delivery on your first order with Test Florist.">
+<link rel="canonical" href="https://www.testflorist.example/spring-flowers/">
+<meta property="og:image" content="https://www.testflorist.example/og-spring.jpg">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-OLD99999"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-OLD99999');</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Do you deliver today?","acceptedAnswer":{"@type":"Answer","text":"Yes, order before 2 pm for same-day delivery in Montreal."}}]}</script>
+<style>
+/* page-wide rules on purpose: each one would restyle the Wix page if the scoping failed */
+:root { --brand: #c2185b; }
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; font-family: "Trebuchet MS", sans-serif; color: #222; background: #fff7fa; }
+header, footer { padding: 16px; background: var(--brand); color: #fff; }
+h1 { font-size: 40px; margin: 24px 16px; }
+h3 { text-transform: uppercase; letter-spacing: 2px; }
+p { margin: 0 0 12px; line-height: 1.6; font-size: 17px; }
+a { color: var(--brand); }
+ul { list-style: square; }
+button, .btn { font: inherit; padding: 12px 20px; border: 0; border-radius: 999px; background: var(--brand); color: #fff; cursor: pointer; }
+input { border: 2px solid var(--brand); padding: 10px; border-radius: 8px; }
+img { filter: saturate(1.2); }
+html.js .reveal { opacity: 0; transition: opacity .3s; }
+html.js .reveal.is-visible { opacity: 1; }
+.hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+section { padding: 16px; min-height: 420px; }
+@media (max-width: 600px) { p { font-size: 15px; } }
+</style>
+</head>
+<body class="landing">
+<header><strong>Test Florist</strong> <a href="#order" class="btn">Order now</a></header>
+<main>
+  <section class="reveal">
+    <h1>Spring flowers delivered today</h1>
+    <p>Hand-tied spring bouquets with tulips, ranunculus and anemones, delivered the same day anywhere in Montreal.</p>
+    <h3>Why Test Florist</h3>
+    <ul><li>Fresh from the market every morning</li><li>Delivery in 3 hours</li><li>Free card message</li></ul>
+    <button type="button" id="more" data-track="show_more">Show more bouquets</button>
+  </section>
+  <section id="order" class="reveal">
+    <h2>Order your bouquet</h2>
+    <form id="order-form" novalidate>
+      <p><label>Name <input name="name" required></label></p>
+      <p><label>Email <input name="email" type="email" required></label></p>
+      <p><label><input type="checkbox" name="consent" required> I accept the
+        <a href="https://www.testflorist.example/privacy">privacy policy</a></label></p>
+      <div class="hp" aria-hidden="true"><input name="website" tabindex="-1" autocomplete="off"></div>
+      <button type="submit">Send my order</button>
+    </form>
+    <p id="thanks" hidden>Thank you! We will call you to confirm.</p>
+  </section>
+</main>
+<footer><p>&copy; Test Florist, Montreal</p></footer>
+<script>
+/* top-level const: running this script twice would throw (the element must not re-run it on Wix page changes) */
+const LANDING = { version: 'spring' };
+document.documentElement.classList.add('js');
+window.dataLayer = window.dataLayer || [];
+function push(event, extra) { window.dataLayer.push(Object.assign({ event: event, landing_version: LANDING.version }, extra || {})); }
+document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('#more')) push('show_more_clicked'); });
+const io = new IntersectionObserver(function (entries) {
+  entries.forEach(function (x) { if (x.isIntersecting) x.target.classList.add('is-visible'); });
+});
+document.querySelectorAll('.reveal').forEach(function (s) { io.observe(s); });
+document.getElementById('order-form').addEventListener('submit', function (e) {
+  e.preventDefault();
+  var f = e.target;
+  if (f.website.value) return; /* honeypot */
+  if (!f.name.value || !/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(f.email.value) || !f.consent.checked) { push('form_error'); return; }
+  push('generate_lead', { form_id: 'order-form' });
+  f.hidden = true;
+  document.getElementById('thanks').hidden = false;
+});
+</script>
+</body>
+</html>

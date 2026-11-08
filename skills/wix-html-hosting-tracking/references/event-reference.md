@@ -55,6 +55,9 @@ GA4 forbids it.
 | `fillHiddenFields` | `true` | fill gclid/UTM hidden inputs |
 | `trackErrors` | `false` | |
 | `maxEvents` | `300` | safety cap per page view |
+| `autoLead` | `true` | `false` = do not send `generate_lead` on lead-form submit (the page sends its own) |
+| `relayDataLayer` | bridge or gtag output | forward the page's own `dataLayer.push({event: …})` events through the Google tag (direct + gtag) or the bridge; skips `gtm.*`, `Pageview`, `page_view` |
+| `relayFilter` | — | relay only pushes that contain this key (e.g. `landing_version`), so other scripts' pushes are ignored |
 | `handshakeTimeout` | `120000` | bridge: ms to keep waiting for the Wix-page listener (it may load after cookie consent); events stay inside the iframe until it answers and are dropped after this |
 | `debug` | `false` | console logging (also `?tracker_debug=1` in the URL) |
 

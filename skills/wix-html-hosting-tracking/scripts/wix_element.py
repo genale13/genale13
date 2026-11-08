@@ -170,11 +170,14 @@ def seo_settings_md(an, json_ld):
     return '\n'.join(lines)
 
 
-def agent_prompt(args, tag, an):
+def agent_prompt(args, tag, an, own_frame=False):
     site = args.site_name or 'the Wix site the user names'
     url = args.element_url or '<https URL of %s.js>' % tag
     canon = an.canonical or ''
-    slug = urlparse(canon).path.strip('/').split('/')[-1] if canon else 'the slug the user wants'
+    slug = urlparse(canon).path.strip('/').split('/')[-1] if canon else ''
+    name = slug.replace('-', ' ').capitalize() if slug else (an.title or tag)[:40]
+    layout = ('  Layouts tab: "No Header & Footer" (the HTML has its own header and footer; avoids a double header).'
+              if own_frame else '  Layouts tab: Standard (keep the site header and footer).')
     return '\n'.join([
         'TASK FOR A BROWSER AGENT: add a custom-element page to the Wix site "%s".' % site, '',
         'RULES',
@@ -182,17 +185,24 @@ def agent_prompt(args, tag, an):
         '- Paste values exactly (paste, never type key by key). Change nothing else. The editor may be in another language.',
         '- Stop and report if the site is on a Free plan, has no connected domain, or shows Wix ads: custom elements need',
         '  a Premium plan, a connected domain and no ads.', '',
-        'STEP 1 - Open the editor. Pages & Menu -> + Add Page -> blank page named "%s".' % (an.title or tag),
-        '  Page SEO (SEO Basics): URL slug "%s"; title and meta description from seo-settings.md.' % slug,
+        'STEP 1 - Open the editor. Pages & Menu -> + Add Page -> blank page named "%s".' % name,
+        '  Page ... (More Actions) -> Settings:',
+        layout,
+        '  SEO Basics: URL slug "%s"; title and meta description from seo-settings.md.' % (slug or 'the slug the user wants'),
+        '  Social Share: og:image, title and description from seo-settings.md. Advanced SEO -> Structured Data Markup: the',
+        '  JSON-LD from structured-data.json (skip if the user prefers; the element also adds it in the browser).',
         'STEP 2 - On that page: Add Elements -> Embed Code -> Custom Element -> Choose Source -> Server URL:',
         '  %s' % url,
         '  Tag Name: %s' % tag,
-        'STEP 3 - Stretch the element to full width and place it right under the header. Remove other placeholder',
-        '  elements on the page. Do not force a small fixed height: the element grows with its content.',
+        'STEP 3 - Stretch the element to full width and place it at the top of the page. Remove other placeholder',
+        '  elements. Do not force a small fixed height: on the live site the element grows with its content.',
+        '  Mobile editor: the element is full width and at the top too.',
         'STEP 4 - (Optional, with Dev Mode on) Properties: element ID customElement1; paste velo-seo-markup.js into the',
         '  page code panel.',
-        'STEP 5 - Preview: the content and styles must appear. Do NOT publish; tell the user it is ready to publish.', '',
-        'REPORT FORMAT', '- Page created (name, slug): ...', '- Custom element source / tag: ...', '- Preview OK?: ...',
+        'STEP 5 - Preview (the element shows inside an iframe in preview; the live page renders it in the page).',
+        '  Do NOT publish; tell the user it is ready. If the editor offers a Test Site next to Publish, suggest it to see',
+        '  the live rendering before publishing to everyone.', '',
+        'REPORT FORMAT', '- Page created (name, slug, layout): ...', '- Custom element source / tag: ...', '- Preview OK?: ...',
         '- Needs the user: ...', ''])
 
 
@@ -253,6 +263,7 @@ def prepare_element(ps, args, files, base_dir, out, gtag_ids, report, warn):
         elif code.strip():
             scripts.append({'code': code})
     body = re.sub(r'<script\b.*?</script>|<noscript\b.*?</noscript>|<style\b.*?</style>', '', body, flags=re.S | re.I)
+    own_frame = bool(re.search(r'<header\b', body, re.I) and re.search(r'<footer\b', body, re.I))
     css_text = '\n'.join(css)
     scoped, imports = scope_css(css_text, tag)
     for url in imports:
@@ -261,9 +272,16 @@ def prepare_element(ps, args, files, base_dir, out, gtag_ids, report, warn):
     base_classes = body_attrs.get('class', '').split()
     mirror = sorted(c for c in classes if c not in base_classes)
 
+    rel = sorted(set(u for u in re.findall(r'''(?:src|href|poster|srcset)\s*=\s*["']([^"'#][^"']*)["']''', body, re.I)
+                     + re.findall(r'''url\(\s*["']?([^"')]+)["']?\s*\)''', css_text)
+                     if not re.match(r'(https:|mailto:|tel:|sms:|data:|javascript:|//|\{\{)', u.strip(), re.I)))
+    if rel:
+        pw('relative or http:// URLs resolve against the Wix page and will break: %s%s. Upload the files (Wix Media, '
+           'static hosting or the repo) and use absolute https:// URLs' % (', '.join(rel[:8]), ' ...' if len(rel) > 8 else ''))
+
     output = 'gtm' if args.gtm else 'gtag'
     cfg = ps.build_tracker_cfg(args, 'static', output, args.embed_id or stem)
-    cfg['root'] = tag
+    cfg['root'] = tag + ' > [data-html-body]'  # the rendered page; it moves with the DOM across Wix page changes
     if own_lead:
         cfg['autoLead'] = False
         page['changes'].append('the page sends its own generate_lead: html-tracker will not send a second one')
@@ -305,10 +323,10 @@ def prepare_element(ps, args, files, base_dir, out, gtag_ids, report, warn):
         with open(os.path.join(out, 'seo-settings.md'), 'w', encoding='utf-8') as fh:
             fh.write(seo_settings_md(an, json_ld))
         with open(os.path.join(out, 'browser-agent-prompt.txt'), 'w', encoding='utf-8') as fh:
-            fh.write(agent_prompt(args, tag, an))
+            fh.write(agent_prompt(args, tag, an, own_frame))
     size = len(element_js.encode('utf-8'))
     page['changes'].append('built custom element <%s> (%d KB): scoped CSS, %d script(s), %d structured-data block(s), '
-                           'html-tracker (direct, %s, root=%s)' % (tag, size // 1024, len(scripts), len(json_ld), output, tag))
+                           'html-tracker (direct, %s, scoped to the element)' % (tag, size // 1024, len(scripts), len(json_ld), output))
     page['output'] = tag + '.js'
     if re.search(r'position\s*:\s*fixed', css_text):
         pw('the page uses position:fixed (sticky bars, floating buttons): check them on the live Wix page, where '
@@ -318,8 +336,11 @@ def prepare_element(ps, args, files, base_dir, out, gtag_ids, report, warn):
     report['next_steps'] = [
         'Host %s.js on HTTPS: e.g. commit it to a public GitHub repo and use https://cdn.jsdelivr.net/gh/<user>/<repo>@<commit>/<path>, '
         'or Wix static hosting.' % tag,
-        'Wix editor (or browser-agent-prompt.txt): new page, Add Elements > Embed Code > Custom Element > Choose Source > '
-        'Server URL = that URL, Tag Name = %s; stretch to full width; set the page SEO from seo-settings.md; publish.' % tag,
+        'Wix editor (or browser-agent-prompt.txt): new page%s, Add Elements > Embed Code > Custom Element > Choose Source > '
+        'Server URL = that URL, Tag Name = %s; stretch to full width; set the page SEO from seo-settings.md; publish.'
+        % (' with Settings > Layouts > No Header & Footer (the HTML has its own)' if own_frame else '', tag),
+        'Before installing: node scripts/simulate_element.js --element %s.js --site https://<site> --gtag <ids> --submit '
+        '(no FAIL). After publishing: browser_check.js on the live page, Tag Assistant, GA4 DebugView.' % tag,
         'Optional: velo-seo-markup.js in the page code gives crawlers without JavaScript the same text.',
         'Tracking runs inside the Wix page: keep ONE Google tag or GTM in Marketing Integrations; no Custom Code listener needed.']
 
@@ -403,13 +424,18 @@ __TRACKER_SOURCE__
   PageElement.prototype = Object.create(HTMLElement.prototype);
   PageElement.prototype.constructor = PageElement;
   Object.setPrototypeOf(PageElement, HTMLElement);
+  var built = null; // the rendered page; Wix SPA navigation creates a new element each visit, the DOM is reused
   PageElement.prototype.connectedCallback = function () {
-    if (this.__ready) return;
-    this.__ready = true;
     var host = this;
     host.style.display = 'block';
     addHead();
+    if (built) { // back on this page without a reload: move the same DOM in, scripts already ran, nothing doubles
+      if (built.parentNode !== host) host.appendChild(built);
+      mirrorState(built);
+      return;
+    }
     var wrap = document.createElement('div');
+    built = wrap;
     Object.keys(BODY_ATTRS).forEach(function (k) { try { wrap.setAttribute(k, BODY_ATTRS[k]); } catch (e) { /* skip */ } });
     wrap.setAttribute('data-html-body', '');
     BASE_CLASSES.forEach(function (c) { wrap.classList.add(c); });

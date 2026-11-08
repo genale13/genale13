@@ -6,19 +6,26 @@ RULES
 - Stop and report if the site is on a Free plan, has no connected domain, or shows Wix ads: custom elements need
   a Premium plan, a connected domain and no ads.
 
-STEP 1 - Open the editor. Pages & Menu -> + Add Page -> blank page named "Coaching profesional online y reorientación profesional | UKUU".
-  Page SEO (SEO Basics): URL slug "coaching-profesional-online"; title and meta description from seo-settings.md.
+STEP 1 - Open the editor. Pages & Menu -> + Add Page -> blank page named "Coaching profesional online".
+  Page ... (More Actions) -> Settings:
+  Layouts tab: "No Header & Footer" (the HTML has its own header and footer; avoids a double header).
+  SEO Basics: URL slug "coaching-profesional-online"; title and meta description from seo-settings.md.
+  Social Share: og:image, title and description from seo-settings.md. Advanced SEO -> Structured Data Markup: the
+  JSON-LD from structured-data.json (skip if the user prefers; the element also adds it in the browser).
 STEP 2 - On that page: Add Elements -> Embed Code -> Custom Element -> Choose Source -> Server URL:
   <https URL of ukuu-coaching-profesional.js>
   Tag Name: ukuu-coaching-profesional
-STEP 3 - Stretch the element to full width and place it right under the header. Remove other placeholder
-  elements on the page. Do not force a small fixed height: the element grows with its content.
+STEP 3 - Stretch the element to full width and place it at the top of the page. Remove other placeholder
+  elements. Do not force a small fixed height: on the live site the element grows with its content.
+  Mobile editor: the element is full width and at the top too.
 STEP 4 - (Optional, with Dev Mode on) Properties: element ID customElement1; paste velo-seo-markup.js into the
   page code panel.
-STEP 5 - Preview: the content and styles must appear. Do NOT publish; tell the user it is ready to publish.
+STEP 5 - Preview (the element shows inside an iframe in preview; the live page renders it in the page).
+  Do NOT publish; tell the user it is ready. If the editor offers a Test Site next to Publish, suggest it to see
+  the live rendering before publishing to everyone.
 
 REPORT FORMAT
-- Page created (name, slug): ...
+- Page created (name, slug, layout): ...
 - Custom element source / tag: ...
 - Preview OK?: ...
 - Needs the user: ...

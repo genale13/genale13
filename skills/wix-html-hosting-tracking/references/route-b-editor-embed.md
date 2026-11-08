@@ -111,28 +111,83 @@ Marketing Integrations (Google tag, GTM, Meta Pixel & CAPI…). Use it when the 
 Meta/TikTok must receive the events too. Use **either** B1 **or** B2 on a page, never both. It does not send
 gclid/UTM into the iframe, and Wix decides the event names each tool receives, so check GA4 DebugView once.
 
-## B3. Custom element (advanced: no iframe on the live site)
+## B3. Custom element (no iframe on the live site)
 
 Wix custom elements are web components. On the live site the element runs inside the page itself (Wix renders
-it in an iframe only in the editor and preview), so the page's GTM click/form triggers can see it.
-Requirements: Premium plan, connected domain and Wix ads removed. Wix: Add Elements → Embed Code → **Custom
-Element** → Choose Source (**Velo File** recommended, or a Server URL over HTTPS) → Tag Name.
+it in an iframe only in the editor and preview), so the Wix page's own Google tag / GTM sees every click and form,
+with the page's cookies, URL and gclid. No listener and no bridge are needed.
+Requirements: Premium plan, connected domain and no Wix ads (`GetSiteContext`; stop and tell the user otherwise).
 
-How to build one from the HTML:
-1. Write a JS file that defines the element and renders the HTML into the **light DOM** (no `attachShadow`, so
-   tracking and forms keep working): `customElements.define('quote-form', class extends HTMLElement {
-   connectedCallback() { if (this._done) return; this._done = true; this.innerHTML = `...`; } })`.
-2. Prefix the HTML's CSS selectors with the tag name (`quote-form .btn {}`) so they do not restyle the rest of
-   the Wix page; drop `html`/`body` rules.
-3. Re-create `<script>` tags with `document.createElement('script')` (scripts in `innerHTML` do not run) and
-   remember `DOMContentLoaded` has already fired.
-4. Load html-tracker inside it with `window.HTML_TRACKER_CONFIG = { mode: 'direct', output: 'gtm' (or 'gtag'),
-   root: 'quote-form', embedId: 'quote-form' }`; `root` limits tracking to the element so the rest of the page is
-   not double counted.
-5. SEO: set the element's `seoMarkup` in Velo with the same text the element shows (Wix warns that different
-   content is cloaking); without it only JavaScript crawlers such as Google see the content.
+### Build (automated)
 
-Test on a duplicate page first; custom elements can change page height and layout.
+```bash
+python3 scripts/prepare_site.py page.html --route element --gtag G-XXXX,AW-YYYY \
+  --tag-name brand-landing --embed-id brand-landing --site-name "Brand" --out element
+```
+
+`--gtag` lists the IDs the **Wix site already loads** (Marketing Integrations); use `--gtm GTM-…` instead when the
+site's tags live in GTM (events then go to `dataLayer`). The script (`scripts/wix_element.py`):
+
+- removes Google tag snippets from the HTML (the Wix page already has them) and keeps a page script that loads
+  GTM itself only if it is not the standard snippet (then keep that script's GTM ID empty);
+- puts the `<body>` HTML in the element's **light DOM** inside `<div data-html-body>` (no shadow DOM, so forms
+  and tracking work);
+- scopes the CSS to the tag: `.btn` → `brand-landing .btn`, `:root`/`html`/`body` → the element, `html.x .y` →
+  `brand-landing [data-html-body].x .y`; `@media`/`@supports`/`@container`/`@layer` are scoped inside,
+  `@keyframes`/`@font-face` stay global. Classes and `data-*` that scripts set on `<html>`/`<body>` are mirrored
+  onto the wrapper;
+- adds font `<link>`s and JSON-LD to the page `<head>` (skips a second FAQPage if the Wix page has one);
+- runs the page's scripts in order in page scope (`DOMContentLoaded` has already fired: scripts that wait for it
+  should also run when `document.readyState !== 'loading'`);
+- survives Wix page changes: Wix is a single-page app and creates a **new** element each time the visitor comes back
+  to the page without a reload; the element moves the already-rendered DOM into it, so the page scripts run once per
+  page load (no doubled listeners, no duplicate `calendly_event_scheduled` or `generate_lead`);
+- embeds html-tracker in direct mode scoped to the element (`root` = `<tag> > [data-html-body]`: only clicks and forms
+  inside it are tracked) and,
+  when the page sends its own `generate_lead`, `autoLead: false`; the page's own `dataLayer` events are relayed
+  through the Google tag (`relayFilter` = the marker key it finds, or `--relay-filter KEY`).
+
+Checks before writing: relative or `http://` URLs (they resolve against the Wix page and break), unfilled `{{…}}`
+placeholders, forms, privacy link, `position: fixed` elements.
+
+Outputs: `<tag>.js`, `seo-settings.md` (slug, title, description, canonical, OG, robots), `structured-data.json`,
+`seo-markup.html` + `velo-seo-markup.js`, `browser-agent-prompt.txt`, `report.md`.
+
+### Host the `.js` (Wix needs an HTTPS URL or a Velo file)
+
+- Public GitHub repo + jsDelivr, pinned to the commit:
+  `https://cdn.jsdelivr.net/gh/<user>/<repo>@<commit-sha>/<path>/<tag>.js` (CORS `*`, immutable cache). A new
+  build means a new commit and a new URL in the element settings. Check the CDN copy is byte-identical:
+  `curl -s <url> | cmp - <tag>.js`.
+- Or a Wix static site (Route A upload) on a subdomain, or **Velo File** (Dev Mode → `public/` → paste the file;
+  Choose Source → Velo File).
+- Re-run the build with `--element-url <url>` so `browser-agent-prompt.txt` contains it.
+
+### Install (editor, or `browser-agent-prompt.txt` for Claude in Chrome)
+
+1. Pages & Menu → + Add Page → blank page; page Settings → **Layouts → No Header & Footer** when the HTML has its own
+   header and footer (no double header; also hides the site menu and "show on all pages" elements on that page);
+   SEO Basics: slug, title, description; Social Share: image; all from `seo-settings.md`.
+2. Add Elements → Embed Code → **Custom Element** → Choose Source → **Server URL** = the `.js` URL; **Tag Name**
+   = the tag.
+3. Stretch to full width, place it under the header, remove placeholders; do not fix a small height.
+4. SEO: Advanced SEO → structured data from `structured-data.json` (or rely on the element, which adds it at
+   runtime); optional Dev Mode → page code `velo-seo-markup.js` with the element ID `customElement1`. Keep
+   `seoMarkup` identical to what the element shows (different content is cloaking).
+5. Preview (an iframe in preview, so tracking checks belong on the live page). A Wix **Test Site** (next to Publish,
+   Release Manager) shows the real rendering before everyone sees it. Ask the user before publishing.
+
+### Check
+
+- Before installing: `node scripts/simulate_element.js --element <tag>.js --site https://www.example.com --path /slug
+  --gtag G-…,AW-… --submit [--screenshot shot.png]`. It loads the element into a simulated Wix page on your hostname
+  with the real Google tag (hits answered locally) and FAILs when Wix styles change, `generate_lead` is sent more
+  than once, a hit carries the test email/phone, or a Wix page change and back adds listeners or loses the content.
+  It fills forms like a visitor (skips hidden anti-spam fields). `--offline` skips Google downloads.
+- Live: `node scripts/browser_check.js "https://www.example.com/<slug>?utm_source=qa" --submit`; Tag Assistant;
+  GA4 DebugView.
+- Watch for: a second header (the page's own header under the Wix header: hide one), `position: fixed` bars
+  and floating buttons (Wix containers can move them), and anchors (`#id`) that scroll under the Wix header.
 
 ## SEO for Route B
 
