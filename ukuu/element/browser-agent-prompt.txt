@@ -13,7 +13,7 @@ STEP 1 - Open the editor. Pages & Menu -> + Add Page -> blank page named "Coachi
   Social Share: og:image, title and description from seo-settings.md. Advanced SEO -> Structured Data Markup: the
   JSON-LD from structured-data.json (skip if the user prefers; the element also adds it in the browser).
 STEP 2 - On that page: Add Elements -> Embed Code -> Custom Element -> Choose Source -> Server URL:
-  <https URL of ukuu-coaching-profesional.js>
+  https://cdn.jsdelivr.net/gh/genale13/genale13@a3a126b622429be6ab8925a23f3f5a5d2ad68d34/ukuu/element/ukuu-coaching-profesional.js
   Tag Name: ukuu-coaching-profesional
 STEP 3 - Stretch the element to full width and place it at the top of the page. Remove other placeholder
   elements. Do not force a small fixed height: on the live site the element grows with its content.
