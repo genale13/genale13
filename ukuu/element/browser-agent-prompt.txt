@@ -6,12 +6,19 @@ RULES
 - Stop and report if the site is on a Free plan, has no connected domain, or shows Wix ads: custom elements need
   a Premium plan, a connected domain and no ads.
 
-STEP 1 - Open the editor. Pages & Menu -> + Add Page -> blank page named "Coaching profesional online".
-  Page ... (More Actions) -> Settings:
-  Layouts tab: "No Header & Footer" (the HTML has its own header and footer; avoids a double header).
-  SEO Basics: URL slug "coaching-profesional-online"; title and meta description from seo-settings.md.
-  Social Share: og:image, title and description from seo-settings.md. Advanced SEO -> Structured Data Markup: the
-  JSON-LD from structured-data.json (skip if the user prefers; the element also adds it in the browser).
+STEP 1 - Open https://manage.wix.com/dashboard/8ae6ea7c-5d0c-47b6-a69e-b42ad31a057d and click Edit Site.
+  Pages & Menu -> + Add Page -> blank page named
+  "Coaching profesional online". Then on that page: ... (More Actions) -> Settings:
+  Layouts tab: "No Header & Footer" (the page has its own header and footer; avoids a double header).
+  SEO Basics:
+    URL slug: coaching-profesional-online
+    Title tag: Coaching profesional online y reorientación profesional | UKUU
+    Meta description: Coaching profesional online y reorientación profesional en español: recupera la confianza y decide tu siguiente etapa con un plan. Primera sesión gratis.
+    Let search engines index this page: on. Keep the default canonical.
+  Social Share:
+    Title: Coaching profesional online · ALINEA PRO® | UKUU Coaching
+    Description: Coaching profesional online y reorientación profesional en español: recupera la confianza y decide tu siguiente etapa con un plan. Primera sesión gratis.
+    Image: choose the file 57848e_e704312b9278452986528d9863529e97~mv2.jpeg in the Media Manager (Site Files; it is already on the site)
 STEP 2 - On that page: Add Elements -> Embed Code -> Custom Element -> Choose Source -> Server URL:
   https://cdn.jsdelivr.net/gh/genale13/genale13@68e917922b94acea26cffbaa60d37f9b6f81f59a/ukuu/element/ukuu-coaching-profesional.js
   Tag Name: ukuu-coaching-profesional
@@ -19,11 +26,8 @@ STEP 3 - Drag the element to the top-left of the page and widen it to the full p
   (custom elements have no Stretch button: on the live site the element spans the browser width by itself).
   Remove other elements on the page. Height does not matter: on the live site the element and its box grow
   with the content. Mobile editor: the element is at the top and as wide as the mobile page.
-STEP 4 - (Optional, with Dev Mode on) Properties: element ID customElement1; paste velo-seo-markup.js into the
-  page code panel.
-STEP 5 - Preview (the element shows inside an iframe in preview; the live page renders it in the page).
-  Do NOT publish; tell the user it is ready. If the editor offers a Test Site next to Publish, suggest it to see
-  the live rendering before publishing to everyone.
+STEP 4 - Preview (the element shows inside a frame in preview and may look small or cut: that is normal; the
+  live page renders it in the page). Do NOT publish: tell the user it is ready to publish.
 
 REPORT FORMAT
 - Page created (name, slug, layout): ...

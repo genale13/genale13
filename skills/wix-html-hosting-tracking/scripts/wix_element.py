@@ -171,27 +171,48 @@ def seo_settings_md(an, json_ld):
     return '\n'.join(lines)
 
 
+def og_image_line(url):
+    m = re.search(r'static\.wixstatic\.com/media/([^/?#]+)', url or '')
+    if m:  # already in the site's media: pick it, no upload
+        return 'choose the file %s in the Media Manager (Site Files; it is already on the site)' % m.group(1)
+    return ('download this image and upload it: %s' % url) if url else '(skip)'
+
+
 def agent_prompt(args, tag, an, own_frame=False):
+    """Self-contained: a browser agent (e.g. Claude in Chrome) has none of the output files, so values are inline."""
     site = args.site_name or 'the Wix site the user names'
     url = args.element_url or '<https URL of %s.js>' % tag
-    canon = an.canonical or ''
+    canon = (an.canonical or '').rstrip('/')
     slug = urlparse(canon).path.strip('/').split('/')[-1] if canon else ''
     name = slug.replace('-', ' ').capitalize() if slug else (an.title or tag)[:40]
-    layout = ('  Layouts tab: "No Header & Footer" (the HTML has its own header and footer; avoids a double header).'
+    meta = an.meta
+    site_id = getattr(args, 'site_id', None)
+    open_line = ('STEP 1 - Open https://manage.wix.com/dashboard/%s and click Edit Site.\n  ' % site_id if site_id
+                 else 'STEP 1 - Open the site in the Wix Editor. ')
+    layout = ('  Layouts tab: "No Header & Footer" (the page has its own header and footer; avoids a double header).'
               if own_frame else '  Layouts tab: Standard (keep the site header and footer).')
-    return '\n'.join([
+    lines = [
         'TASK FOR A BROWSER AGENT: add a custom-element page to the Wix site "%s".' % site, '',
         'RULES',
         '- The user signs in; never type passwords or 2FA codes. Ask before publishing, buying or deleting anything.',
         '- Paste values exactly (paste, never type key by key). Change nothing else. The editor may be in another language.',
         '- Stop and report if the site is on a Free plan, has no connected domain, or shows Wix ads: custom elements need',
         '  a Premium plan, a connected domain and no ads.', '',
-        'STEP 1 - Open the editor. Pages & Menu -> + Add Page -> blank page named "%s".' % name,
-        '  Page ... (More Actions) -> Settings:',
+        open_line + 'Pages & Menu -> + Add Page -> blank page named',
+        '  "%s". Then on that page: ... (More Actions) -> Settings:' % name,
         layout,
-        '  SEO Basics: URL slug "%s"; title and meta description from seo-settings.md.' % (slug or 'the slug the user wants'),
-        '  Social Share: og:image, title and description from seo-settings.md. Advanced SEO -> Structured Data Markup: the',
-        '  JSON-LD from structured-data.json (skip if the user prefers; the element also adds it in the browser).',
+        '  SEO Basics:',
+        '    URL slug: %s' % (slug or '(ask the user)'),
+        '    Title tag: %s' % (an.title or '(ask the user)'),
+        '    Meta description: %s' % (meta.get('description') or '(ask the user)'),
+        '    Let search engines index this page: on. Keep the default canonical.',
+    ]
+    if meta.get('og:image') or meta.get('og:title'):
+        lines += ['  Social Share:',
+                  '    Title: %s' % (meta.get('og:title') or an.title or ''),
+                  '    Description: %s' % (meta.get('og:description') or meta.get('description') or ''),
+                  '    Image: ' + og_image_line(meta.get('og:image', ''))]
+    lines += [
         'STEP 2 - On that page: Add Elements -> Embed Code -> Custom Element -> Choose Source -> Server URL:',
         '  %s' % url,
         '  Tag Name: %s' % tag,
@@ -199,13 +220,11 @@ def agent_prompt(args, tag, an, own_frame=False):
         '  (custom elements have no Stretch button: on the live site the element spans the browser width by itself).',
         '  Remove other elements on the page. Height does not matter: on the live site the element and its box grow',
         '  with the content. Mobile editor: the element is at the top and as wide as the mobile page.',
-        'STEP 4 - (Optional, with Dev Mode on) Properties: element ID customElement1; paste velo-seo-markup.js into the',
-        '  page code panel.',
-        'STEP 5 - Preview (the element shows inside an iframe in preview; the live page renders it in the page).',
-        '  Do NOT publish; tell the user it is ready. If the editor offers a Test Site next to Publish, suggest it to see',
-        '  the live rendering before publishing to everyone.', '',
-        'REPORT FORMAT', '- Page created (name, slug, layout): ...', '- Custom element source / tag: ...', '- Preview OK?: ...',
-        '- Needs the user: ...', ''])
+        'STEP 4 - Preview (the element shows inside a frame in preview and may look small or cut: that is normal; the',
+        '  live page renders it in the page). Do NOT publish: tell the user it is ready to publish.', '',
+        'REPORT FORMAT', '- Page created (name, slug, layout): ...', '- Custom element source / tag: ...',
+        '- Preview OK?: ...', '- Needs the user: ...', '']
+    return '\n'.join(lines)
 
 
 # -------------------------------------------------------------------------------- builder
