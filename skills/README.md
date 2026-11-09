@@ -19,7 +19,8 @@ inside it**, with SEO intact. It covers:
   with the code to paste.
 - **Checks:** `verify_live.py` (published static site), `browser_check.js` (events, Google hits, form
   submission in a real browser), `simulate_embed.js` and `simulate_element.js` (a simulated Wix page to test an
-  embed or a custom element before installing anything).
+  embed or a custom element before installing anything) and `rehearse_live_wix.js` (the custom element inside a
+  real published page of your site, in the local browser only).
 
 What it tracks: CTA, link, outbound, phone/email/WhatsApp and download clicks, custom `data-track`
 events, rage clicks, scroll depth, engaged time, element views, form view/start/submit/abandon,

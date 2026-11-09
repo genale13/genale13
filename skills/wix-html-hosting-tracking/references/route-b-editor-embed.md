@@ -139,6 +139,10 @@ site's tags live in GTM (events then go to `dataLayer`). The script (`scripts/wi
 - adds font `<link>`s and JSON-LD to the page `<head>` (skips a second FAQPage if the Wix page has one);
 - runs the page's scripts in order in page scope (`DOMContentLoaded` has already fired: scripts that wait for it
   should also run when `document.readyState !== 'loading'`);
+- fits the Wix layout on the live site: spans the browser width (the Wix Editor has no Stretch button for custom
+  elements; build with `--element-width box` to keep the editor size, e.g. for a form widget) and sets its Wix box
+  (up to the `comp-…` wrapper) to the content height; without that the desktop page overflows the box and the
+  **mobile site cuts everything below the box height** (`#site-root` clips on mobile);
 - survives Wix page changes: Wix is a single-page app and creates a **new** element each time the visitor comes back
   to the page without a reload; the element moves the already-rendered DOM into it, so the page scripts run once per
   page load (no doubled listeners, no duplicate `calendly_event_scheduled` or `generate_lead`);
@@ -170,7 +174,9 @@ Outputs: `<tag>.js`, `seo-settings.md` (slug, title, description, canonical, OG,
    SEO Basics: slug, title, description; Social Share: image; all from `seo-settings.md`.
 2. Add Elements → Embed Code → **Custom Element** → Choose Source → **Server URL** = the `.js` URL; **Tag Name**
    = the tag.
-3. Stretch to full width, place it under the header, remove placeholders; do not fix a small height.
+3. Place it at the top of the page, as wide as the page grid (custom elements have no Stretch button; the element
+   spans the browser width itself on the live site). Height does not matter. Remove other elements. Mobile editor:
+   at the top, full mobile width.
 4. SEO: Advanced SEO → structured data from `structured-data.json` (or rely on the element, which adds it at
    runtime); optional Dev Mode → page code `velo-seo-markup.js` with the element ID `customElement1`. Keep
    `seoMarkup` identical to what the element shows (different content is cloaking).
@@ -184,6 +190,10 @@ Outputs: `<tag>.js`, `seo-settings.md` (slug, title, description, canonical, OG,
   with the real Google tag (hits answered locally) and FAILs when Wix styles change, `generate_lead` is sent more
   than once, a hit carries the test email/phone, or a Wix page change and back adds listeners or loses the content.
   It fills forms like a visitor (skips hidden anti-spam fields). `--offline` skips Google downloads.
+- Layout, before installing: `node scripts/rehearse_live_wix.js --element <tag>.js --page https://www.example.com/<page>
+  --no-header-footer [--mobile] [--screenshot shot.png]` opens a published page of the site and, in the local browser
+  only, puts the element in place of a component that sits directly in a section (or a section of its own). FAIL
+  when the element is not full width, the page gets a horizontal scrollbar or content cannot be reached.
 - Live: `node scripts/browser_check.js "https://www.example.com/<slug>?utm_source=qa" --submit`; Tag Assistant;
   GA4 DebugView.
 - Watch for: a second header (the page's own header under the Wix header: hide one), `position: fixed` bars

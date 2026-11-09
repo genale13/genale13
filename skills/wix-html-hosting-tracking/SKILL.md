@@ -22,7 +22,8 @@ as real pages on Wix, Route A) or to bridge it (Route B). Details: `references/w
   from Wix's docs/recipes (`ReadFullDocsArticle`), never from memory. On a failed call, fix what the error
   says and quote its Wix request id.
 - **Scripts** (Python 3, standard library): `scripts/prepare_site.py`, `scripts/verify_live.py`.
-  Optional, Node + Playwright: `scripts/browser_check.js`, `scripts/simulate_embed.js`, `scripts/simulate_element.js`.
+  Optional, Node + Playwright: `scripts/browser_check.js`, `scripts/simulate_embed.js`, `scripts/simulate_element.js`,
+  `scripts/rehearse_live_wix.js`.
 - **A browser agent or the user** for screens without an API (editor embeds, Custom Code, Marketing
   Integrations, GTM, GA4, Google Ads): `references/browser-runbook.md`, plus the ready-to-paste
   `browser-agent-prompt.txt` that `prepare_site.py` writes for Route B. No GTM, GA4 or Google Ads connector is
@@ -101,10 +102,14 @@ and the steps, and say that any upload (even the drop page) goes live at once on
 5. Put the page's key text in native Wix text too; iframe text does not count for the page's SEO.
 
 **B3 — custom element (no iframe):** `python3 scripts/prepare_site.py <file.html> --route element --gtag G-…,AW-… --tag-name <brand-page> --site-name "<site>"` turns one page into `<tag>.js`: HTML in the light DOM, CSS scoped to the tag (`html`/`body` rules mapped to the element), scripts run in page scope, fonts and JSON-LD added to the page, html-tracker in direct mode scoped to the element; when Wix re-creates the element on a page change it reuses the
-rendered DOM, so page scripts run once per page load. It also writes `seo-settings.md`, `structured-data.json`, `velo-seo-markup.js` and `browser-agent-prompt.txt`. Host the `.js` on HTTPS (public GitHub repo → `https://cdn.jsdelivr.net/gh/<user>/<repo>@<commit-sha>/<path>`, pinned to a commit), re-run with `--element-url <that URL>` so the prompt has it. Check it first:
-`node scripts/simulate_element.js --element <tag>.js --site https://www.example.com --gtag G-…,AW-… --submit` (no FAIL).
+rendered DOM, so page scripts run once per page load. On the live site the element spans the browser width (the Wix
+Editor has no Stretch for custom elements; `--element-width box` keeps the editor size) and makes its Wix box follow
+the content height (the Wix mobile site cuts anything below the box). It also writes `seo-settings.md`, `structured-data.json`, `velo-seo-markup.js` and `browser-agent-prompt.txt`. Host the `.js` on HTTPS (public GitHub repo → `https://cdn.jsdelivr.net/gh/<user>/<repo>@<commit-sha>/<path>`, pinned to a commit), re-run with `--element-url <that URL>` so the prompt has it. Check it first:
+`node scripts/simulate_element.js --element <tag>.js --site https://www.example.com --gtag G-…,AW-… --submit`, then
+`node scripts/rehearse_live_wix.js --element <tag>.js --page https://www.example.com/<any page> --no-header-footer`
+with and without `--mobile` (the element inside the real Wix layout, in the local browser only): no FAIL.
 Then: new page (Layouts → *No Header & Footer* when the HTML has its own) → Add Elements → Embed Code → Custom
-Element → Server URL + Tag Name → stretch → SEO → ask, publish. No listener: the Wix page's own Google tag sees the
+Element → Server URL + Tag Name → top of the page, page width → SEO → ask, publish. No listener: the Wix page's own Google tag sees the
 events. Details: `route-b-editor-embed.md` §B3.
 
 ## Step 4 — Google side (details: `references/google-setup.md`)
@@ -123,8 +128,9 @@ page-view setup on editor sites (Wix is a single-page app). Consent: defaults al
   where the form would post and the Google hits (answered locally, not sent). A warning that a container sent
   no hits usually means an empty or unpublished GTM container.
 - Route B3: `simulate_element.js` before installing (Wix styles unchanged, one `generate_lead`, Google hits without
-  personal data, a Wix page change and back without doubled events); check the CDN copy is byte-identical to the
-  tested file; after publishing, `browser_check.js` on the live page.
+  personal data, a Wix page change and back without doubled events) and `rehearse_live_wix.js` on a published page
+  of the same site, desktop and `--mobile` (full width, all content reachable, fixed parts in the window); check the
+  CDN copy is byte-identical to the tested file; after publishing, `browser_check.js` on the live page.
 - Route B1/B2: `simulate_embed.js` before installing; after installing, `browser_check.js` on the Wix page (the
   iframe must show `bridge` mode and the parent context) or, in the browser console,
   `Object.keys(window.google_tag_manager||{})` and `window.__htmlTrackerListener`. `verify_live.py` is for
@@ -159,6 +165,7 @@ and the events they will now see. Mention every **check:** item you could not fi
 - `scripts/browser_check.js` — Playwright check of a live page: events, dataLayer, Google hits, `--submit` forms.
 - `scripts/simulate_embed.js` — Route B1/B2: simulated Wix page + embed, before installing anything.
 - `scripts/simulate_element.js` — Route B3: simulated Wix page + custom element (CSS leaks, lead count, page changes).
+- `scripts/rehearse_live_wix.js` — Route B3: the element inside a real published page of the site, locally (layout).
 - `assets/html-tracker.js` — the tracker (direct and bridge modes). Options/events: `references/event-reference.md`.
 - `assets/wix-parent-listener.html` — Custom Code listener for Route B1 (prepare_site writes a configured copy).
 - `assets/velo-page-code.js` — Route B2 (written to the output only with `--velo`).

@@ -13,11 +13,12 @@ STEP 1 - Open the editor. Pages & Menu -> + Add Page -> blank page named "Coachi
   Social Share: og:image, title and description from seo-settings.md. Advanced SEO -> Structured Data Markup: the
   JSON-LD from structured-data.json (skip if the user prefers; the element also adds it in the browser).
 STEP 2 - On that page: Add Elements -> Embed Code -> Custom Element -> Choose Source -> Server URL:
-  https://cdn.jsdelivr.net/gh/genale13/genale13@a3a126b622429be6ab8925a23f3f5a5d2ad68d34/ukuu/element/ukuu-coaching-profesional.js
+  <https URL of ukuu-coaching-profesional.js>
   Tag Name: ukuu-coaching-profesional
-STEP 3 - Stretch the element to full width and place it at the top of the page. Remove other placeholder
-  elements. Do not force a small fixed height: on the live site the element grows with its content.
-  Mobile editor: the element is full width and at the top too.
+STEP 3 - Drag the element to the top-left of the page and widen it to the full page width shown in the editor
+  (custom elements have no Stretch button: on the live site the element spans the browser width by itself).
+  Remove other elements on the page. Height does not matter: on the live site the element and its box grow
+  with the content. Mobile editor: the element is at the top and as wide as the mobile page.
 STEP 4 - (Optional, with Dev Mode on) Properties: element ID customElement1; paste velo-seo-markup.js into the
   page code panel.
 STEP 5 - Preview (the element shows inside an iframe in preview; the live page renders it in the page).

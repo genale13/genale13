@@ -573,6 +573,9 @@ def main():
     t.add_argument('--velo', action='store_true', help='embed/listener: also write velo-page-code.js (use it INSTEAD of the listener)')
     t.add_argument('--tag-name', help='element: custom element tag, lowercase with a hyphen (default html-<file name>)')
     t.add_argument('--element-url', help='element: final https URL of the generated .js, used in the browser-agent prompt')
+    t.add_argument('--element-width', choices=['full', 'box'], default='full',
+                   help='element: full = span the browser width on the live site (the Wix Editor cannot stretch custom '
+                        'elements); box = keep the size set in the editor (widgets, forms)')
     t.add_argument('--relay-filter', help="key that marks the page's own dataLayer events to relay (auto-detected when possible)")
     t.add_argument('--track-errors', action='store_true')
     t.add_argument('--debug', action='store_true')
