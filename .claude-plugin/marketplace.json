@@ -1,0 +1,5 @@
+{
+  "name": "genale13",
+  "owner": { "name": "genale13" },
+  "plugins": [{ "name": "status-colors", "source": "./mods/status-colors" }]
+}
